@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>UFI</title>
+  <link rel="stylesheet" href="./main.css">
+  <script type="module">
+    import { app } from './js/index.js'
+
+    try {
+      document.addEventListener('DOMContentLoaded', app);
+    } catch (_) {
+      window.location.reload()
+    }
+  </script>
+</head>
+<body></body>
+</html>

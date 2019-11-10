@@ -1,0 +1,17 @@
+{
+  "name": "uficlient",
+  "version": "1.0.0",
+  "description": "Web-app client for UFI",
+  "main": "src/index.js",
+  "scripts": {
+    "amend": "scripts/amend-and-test.sh",
+    "deploy": "scripts/deploy.sh",
+    "push": "git push origin --force && git push github --force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "usp.wurstsalat.cloud:git/ufi-client.git"
+  },
+  "author": "Lennart Pelz <mail@mrpelz.de>",
+  "license": "UNLICENSED"
+}

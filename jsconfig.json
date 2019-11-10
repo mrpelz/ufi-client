@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "checkJs": true,
+    "lib": ["esnext", "dom"],
+    "module": "es6",
+    "moduleResolution": "classic",
+    "noEmit": true,
+    "target": "esnext"
+  }
+}
