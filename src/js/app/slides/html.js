@@ -1,17 +1,12 @@
-import { html } from '../index.js';
-
 /**
- * @param {{
-  *  slide: SlideDataResolved
-  * }} props
-  */
- export const HTML = ({ slide: { assets: [document] } }) => {
-   return html`
-     <section
-       data-role="ufi_slide"
-       class="html"
-     >
-       <iframe src="${document.url}"></iframe>
-     </section>
-   `;
- };
+ * @param {Element} root
+ * @param {SlideData} _
+ * @param {AssetData[]} assets
+ */
+export const htmlSlide = (root, _, assets) => {
+  const [document] = assets;
+
+  root.innerHTML = `
+    <iframe src="${document.url}"></iframe>
+  `;
+};

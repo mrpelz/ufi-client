@@ -13,13 +13,6 @@ declare type SlideData = {
   type?: string;
 };
 
-declare type SlideDataResolved = {
-  assets?: AssetData[];
-  id?: string;
-  state?: any;
-  type?: string;
-};
-
 declare type LayerData = {
   classNames?: string;
   id?: string;
