@@ -3,7 +3,7 @@
     "alwaysStrict": true,
     "checkJs": true,
     "lib": ["esnext", "dom"],
-    "module": "es6",
+    "module": "esnext",
     "moduleResolution": "classic",
     "noEmit": true,
     "target": "esnext"
