@@ -6,7 +6,7 @@ import { useState } from '../../lib/preact/hooks/src/index.js';
  *  slide: SlideDataResolved
  * }} props
  */
-export const ReactSlide = ({ slide, slide: { assets: [moduleAsset] } }) => {
+export const React = ({ slide, slide: { assets: [moduleAsset] } }) => {
   const [moduleObject, setModule] = useState(null);
   const { url } = moduleAsset;
 
