@@ -1,3 +1,3 @@
 *.d.ts
-src/js/external/*
-src/js/slides/react.js
+src/js/app/slides/react.js
+src/js/lib/*

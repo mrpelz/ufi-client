@@ -1,11 +1,6 @@
 import { html } from '../index.js';
 
 /**
- * @typedef AnySlide
- * @type {typeof Debug | typeof import('./image.js')['Image']}
- */
-
-/**
  * @param {{
  *  slide: SlideDataResolved
  * }} props

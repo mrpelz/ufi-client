@@ -1,9 +1,10 @@
-import { h, render } from './external/preact.js';
+import { h, render } from '../lib/preact/src/index.js';
 import { Debug } from './slides/debug.js';
 import { HTML } from './slides/html.js';
 import { Image } from './slides/image.js';
 import { Layer } from './layer.js';
-import htm from './external/htm.js';
+import { React } from './slides/react.js';
+import htm from '../lib/htm/src/index.mjs';
 
 // DEBUG START
 let pause = false;
@@ -49,7 +50,8 @@ const assetSelector = `link[data-role="${assetRole}"]`;
 const slideTypes = {
   debug: Debug,
   html: HTML,
-  image: Image
+  image: Image,
+  react: React
 };
 
 /**
@@ -106,7 +108,7 @@ function handleLayer(assetsData, slidesData, layer) {
     )
   ).filter(Boolean);
 
-  const Slide = /** @type {import('./slides/debug.js').AnySlide} */ (
+  const Slide = /** @type {import('./app/slides/debug.js.js').AnySlide} */ (
     debug
     ? Debug
     : slideTypes[slideType] || Debug
