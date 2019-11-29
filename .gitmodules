@@ -1,6 +1,0 @@
-[submodule "src/js/lib/preact"]
-	path = src/js/lib/preact
-	url = https://github.com/preactjs/preact.git
-[submodule "src/js/lib/htm"]
-	path = src/js/lib/htm
-	url = https://github.com/developit/htm.git

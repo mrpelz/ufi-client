@@ -23,7 +23,7 @@ let pause = false;
 const head = document.head;
 const body = document.body;
 
-const assetRole = 'ufi_asset';
+const assetAttribute = 'ufi-asset';
 const layerSelector = 'ufi-layer';
 
 const layerTypes = {
@@ -54,7 +54,7 @@ function handleAssets(movement) {
   }) => {
     const link = document.createElement('link');
 
-    link.dataset.role = assetRole;
+    link.setAttribute(assetAttribute, '');
     link.rel = type === 'modulepreload' ? 'modulepreload' : 'preload';
     if (hash) link.integrity = hash;
     if (id) link.id = id;
@@ -66,6 +66,7 @@ function handleAssets(movement) {
   });
 
   head.append(...newLinkElements);
+  head.normalize();
 }
 
 /**
@@ -153,6 +154,7 @@ function handleLayers(movement, assets) {
   ).filter(Boolean);
 
   body.append(...orderedLayers);
+  body.normalize();
 }
 
 /**
