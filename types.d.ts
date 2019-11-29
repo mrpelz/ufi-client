@@ -7,21 +7,16 @@ declare type AssetData = {
 
 };
 
-declare type SlideData = {
-  assets?: string[];
-  id?: string;
-  type?: string;
-};
-
 declare type LayerData = {
+  assets?: string[];
   classNames?: string;
   id?: string;
   slide?: string;
   state?: any;
+  type?: string;
 };
 
 declare type MessageData = {
   assets: AssetData[];
-  slides: SlideData[];
   layers: LayerData[];
 };

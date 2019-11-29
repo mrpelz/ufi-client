@@ -1,29 +1,29 @@
 /**
  * @typedef I_HTML
- * @type {import('./html.js')['htmlSlide']}
+ * @type {import('./html.js')['htmlLayer']}
  */
 
  /**
  * @typedef I_Image
- * @type {import('./image.js')['imageSlide']}
+ * @type {import('./image.js')['imageLayer']}
  */
 
  /**
  * @typedef I_React
- * @type {import('./module.js')['reactSlide']}
+ * @type {import('./module.js')['moduleLayer']}
  */
 
 /**
- * @typedef AnySlide
- * @type {typeof debugSlide}
+ * @typedef AnyLayer
+ * @type {typeof debugLayer|I_HTML|I_Image|I_React}
  */
 
 /**
  * @param {Element} root
- * @param {SlideData} data
+ * @param {LayerData} data
  * @param {AssetData[]} assets
  */
-export const debugSlide = (root, { id, type }, assets) => {
+export const debugLayer = (root, { id, type }, assets) => {
   root.innerHTML = `
     <h2>id: ${id}</h2>
     <h3>type: ${type}</h3>

@@ -1,9 +1,9 @@
 /**
  * @param {Element} root
- * @param {SlideData} _
+ * @param {LayerData} _
  * @param {AssetData[]} assets
  */
-export const imageSlide = (root, _, assets) => {
+export const imageLayer = (root, _, assets) => {
   const [image] = assets;
 
   root.innerHTML = `

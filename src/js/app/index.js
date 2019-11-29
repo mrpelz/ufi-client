@@ -1,7 +1,7 @@
-import { debugSlide } from './slides/debug.js';
-import { htmlSlide } from './slides/html.js';
-import { imageSlide } from './slides/image.js';
-import { moduleSlide } from './slides/module.js';
+import { debugLayer } from './layers/debug.js';
+import { htmlLayer } from './layers/html.js';
+import { imageLayer } from './layers/image.js';
+import { moduleLayer } from './layers/module.js';
 
 // DEBUG START
 let pause = false;
@@ -24,18 +24,13 @@ const head = document.head;
 const body = document.body;
 
 const assetRole = 'ufi_asset';
-
-const layerContainer = body.querySelector('ufi-layer-container');
 const layerSelector = 'ufi-layer';
 
-const slidePreloadContainer = body.querySelector('ufi-slide-preload-container');
-const slideSelector = 'ufi-slide';
-
-const slideTypes = {
-  debug: debugSlide,
-  html: htmlSlide,
-  image: imageSlide,
-  module: moduleSlide
+const layerTypes = {
+  debug: debugLayer,
+  html: htmlLayer,
+  image: imageLayer,
+  module: moduleLayer
 };
 
 /**
@@ -74,70 +69,31 @@ function handleAssets(movement) {
 }
 
 /**
- * @param {SlideData} data
+ * @param {LayerData} data
  * @param {AssetData[]} assets
  */
-function handleSlide(data, assets) {
+function createLayer(data, assets) {
   const {
     assets: assetIds,
     id,
     type
   } = data;
 
-  const element = document.createElement(slideSelector);
+  const element = document.createElement(layerSelector);
 
   if (id) element.id = id;
-  if (type) element.className = type;
+  if (type) element.setAttribute('ufi-type', type);
 
-  const slideContent = /** @type {import('./slides/debug.js').AnySlide} */ (
-    slideTypes[type] || debugSlide
+  const layerContent = /** @type {import('./layers/debug.js').AnyLayer} */ (
+    layerTypes[type] || debugLayer
   );
 
-  if (slideContent instanceof Function) {
+  if (layerContent instanceof Function) {
     const matchingAssets = assets.filter(({ id: assetId }) => assetIds.includes(assetId));
-    slideContent(element, data, matchingAssets);
+    layerContent(element, data, matchingAssets);
   }
 
   return element;
-}
-
-/**
- * @param {{
- *  createForPreload: SlideData[],
- *  createForLayer: SlideData[],
- *  moveToPreload: SlideData[],
- *  moveToLayer: SlideData[],
- *  delete: SlideData[]
- * }} movement
- * @param {AssetData[]} assets
- */
-function handleSlides(movement, assets) {
-  const newSlidesForPreload = movement.createForPreload.map((data) => {
-    const element = handleSlide(data, assets);
-    return element;
-  });
-
-  const newSlidesForLayer = movement.createForLayer.map((data) => {
-    const element = handleSlide(data, assets);
-    return element;
-  });
-
-  const oldSlidesMovingToPreload = movement.moveToPreload.map(
-    ({ id }) => layerContainer.querySelector(`#${CSS.escape(id)}`)
-  ).filter(Boolean);
-
-  const oldSlidesMovingToLayer = movement.moveToLayer.map(
-    ({ id }) => slidePreloadContainer.querySelector(`#${CSS.escape(id)}`)
-  ).filter(Boolean);
-
-  movement.delete.forEach(({ id }) => {
-    const element = slidePreloadContainer.querySelector(`#${CSS.escape(id)}`);
-    if (element) element.remove();
-  });
-
-  slidePreloadContainer.append(...newSlidesForPreload, ...oldSlidesMovingToPreload);
-
-  return [...newSlidesForLayer, ...oldSlidesMovingToLayer];
 }
 
 /**
@@ -163,32 +119,25 @@ function updateLayer(element, data) {
  *  delete: LayerData[],
  *  order: string[]
  * }} movement
- * @param {Element[]} preloadedSlides
+ * @param {AssetData[]} assets
  */
-function handleLayers(movement, preloadedSlides) {
+function handleLayers(movement, assets) {
   const newLayers = movement.create.map((data) => {
-    const { id, slide } = data;
-
-    const element = document.createElement(layerSelector);
-    element.id = id;
-
+    const element = createLayer(data, assets);
     updateLayer(element, data);
-
-    const matchingSlide = preloadedSlides.find(({ id: slideId }) => slide === slideId);
-    if (matchingSlide) element.append(matchingSlide);
 
     return element;
   });
 
   movement.delete.forEach(({ id }) => {
-    const element = layerContainer.querySelector(`#${CSS.escape(id)}`);
+    const element = body.querySelector(`#${CSS.escape(id)}`);
     if (element) element.remove();
   });
 
   movement.update.forEach((data) => {
     const { id } = data;
 
-    const element = layerContainer.querySelector(`#${CSS.escape(id)}`);
+    const element = body.querySelector(`#${CSS.escape(id)}`);
     if (!element) return;
 
     updateLayer(element, data);
@@ -197,13 +146,13 @@ function handleLayers(movement, preloadedSlides) {
   const orderedLayers = movement.order.map(
     (id) => [
       ...newLayers,
-      ...Array.from(layerContainer.querySelectorAll(layerSelector))
+      ...Array.from(body.querySelectorAll(layerSelector))
     ].find(
       ({ id: layerId }) => id === layerId
     )
   ).filter(Boolean);
 
-  layerContainer.append(...orderedLayers);
+  body.append(...orderedLayers);
 }
 
 /**
@@ -249,7 +198,6 @@ function deepEqual(target, source) {
 function calculateMovements(oldData, newData) {
   const data = oldData || {
     assets: /** @type {AssetData[]} */ ([]),
-    slides: /** @type {SlideData[]} */ ([]),
     layers: /** @type {LayerData[]} */ ([])
   };
 
@@ -263,59 +211,6 @@ function calculateMovements(oldData, newData) {
       delete: data.assets.filter(
         ({ id: oldAssetId }) => !newData.assets.find(
           ({ id: newAssetId }) => oldAssetId === newAssetId
-        )
-      )
-    },
-    slides: {
-      createForPreload: newData.slides.filter(
-        ({ id: newSlideId }) => (
-          !data.slides.find(
-            ({ id: oldSlideId }) => newSlideId === oldSlideId
-          )
-          && !newData.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-        )
-      ),
-      createForLayer: newData.slides.filter(
-        ({ id: newSlideId }) => (
-          !data.slides.find(
-            ({ id: oldSlideId }) => newSlideId === oldSlideId
-          )
-          && newData.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-        )
-      ),
-      moveToPreload: newData.slides.filter(
-        ({ id: newSlideId }) => (
-          data.slides.find(
-            ({ id: oldSlideId }) => newSlideId === oldSlideId
-          )
-          && !newData.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-          && data.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-        )
-      ),
-      moveToLayer: newData.slides.filter(
-        ({ id: newSlideId }) => (
-          data.slides.find(
-            ({ id: oldSlideId }) => newSlideId === oldSlideId
-          )
-          && newData.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-          && !data.layers.find(
-            ({ slide }) => newSlideId === slide
-          )
-        )
-      ),
-      delete: data.slides.filter(
-        ({ id: oldSlideId }) => !newData.slides.find(
-          ({ id: newSlideId }) => newSlideId === oldSlideId
         )
       )
     },
@@ -373,12 +268,8 @@ function handleMessage({ data: payload }) {
   const movements = calculateMovements(data, newData);
   data = newData;
 
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(movements, null, 2));
-
   handleAssets(movements.assets);
-  const preloadedSlides = handleSlides(movements.slides, data.assets);
-  handleLayers(movements.layers, preloadedSlides);
+  handleLayers(movements.layers, data.assets);
 }
 
 export function app() {

@@ -19,17 +19,6 @@ body {
   padding: unset;
 }
 
-ufi-slide-preload-container {
-  width: 0;
-  height: 0;
-  visibility: hidden;
-  z-index: -1;
-}
-
-ufi-layer-cotainer {
-  display: contents;
-}
-
 ufi-layer {
   position: absolute;
   top: 0;
@@ -56,20 +45,13 @@ ufi-layer.bottom-half {
   top: 50%;
 }
 
-ufi-slide {
-  width: 100%;
-  height: 100%;
-  margin: unset;
-  padding: unset;
-}
-
-ufi-slide.image > img {
+ufi-layer[ufi-type="image"] > img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-ufi-slide.html > iframe {
+ufi-layer[ufi-type="html"] > iframe {
   width: 100%;
   height: 100%;
   border: none;

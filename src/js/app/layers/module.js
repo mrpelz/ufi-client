@@ -2,10 +2,10 @@ import { dynamicImport } from '../dynamicImport.js';
 
 /**
  * @param {Element} root
- * @param {SlideData} data
+ * @param {LayerData} data
  * @param {AssetData[]} assets
  */
-export const moduleSlide = (root, data, assets) => {
+export const moduleLayer = (root, data, assets) => {
   const [moduleAsset] = assets;
   if (moduleAsset.type !== 'modulepreload') return;
 
