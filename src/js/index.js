@@ -65,8 +65,10 @@ function handleAssets(movement) {
     return link;
   });
 
-  head.append(...newLinkElements);
-  head.normalize();
+  window.requestAnimationFrame(() => {
+    head.append(...newLinkElements);
+    head.normalize();
+  });
 }
 
 /**
@@ -153,8 +155,10 @@ function handleLayers(movement, assets) {
     )
   ).filter(Boolean);
 
-  body.append(...orderedLayers);
-  body.normalize();
+  window.requestAnimationFrame(() => {
+    body.append(...orderedLayers);
+    body.normalize();
+  });
 }
 
 /**
@@ -194,8 +198,8 @@ function deepEqual(target, source) {
 }
 
 /**
- * @param {MessageData|null} oldData
- * @param {MessageData} newData
+ * @param {UpdateData|null} oldData
+ * @param {UpdateData} newData
  */
 function calculateMovements(oldData, newData) {
   const data = oldData || {
@@ -249,7 +253,7 @@ function calculateMovements(oldData, newData) {
 
 
 /**
- * @type {MessageData|null}
+ * @type {UpdateData|null}
  */
 let data = null;
 
@@ -259,13 +263,20 @@ function handleMessage({ data: payload }) {
   /**
    * @type {MessageData}
    */
-  let newData;
+  let incoming;
 
   try {
-    newData = JSON.parse(payload);
+    incoming = JSON.parse(payload);
   } catch (_) {
     return;
   }
+
+  if (incoming.type !== 'update') return;
+
+  /**
+   * @type {UpdateData}
+   */
+  const newData = incoming.data;
 
   const movements = calculateMovements(data, newData);
   data = newData;
@@ -280,4 +291,8 @@ export function app() {
 
   const stream = new EventSource(streamUrl.toString());
   stream.onmessage = handleMessage;
+
+  window.setInterval(() => {
+    if (stream.readyState === stream.CLOSED) window.location.reload(true);
+  }, 5000);
 }

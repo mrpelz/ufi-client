@@ -16,7 +16,15 @@ declare type LayerData = {
   type?: string;
 };
 
-declare type MessageData = {
+declare type UpdateData = {
   assets: AssetData[];
   layers: LayerData[];
+};
+
+declare type MessageData = {
+  type: 'update';
+  data: UpdateData;
+} | {
+  type: 'keepalive';
+  data: null
 };

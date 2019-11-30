@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  align-items: center;
+}
+
+#clock {
+  width: 90vw;
+  height: 90vh;
+  margin: 10vmax;
+}
