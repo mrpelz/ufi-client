@@ -1,8 +1,16 @@
-const transitionDuration = 200;
-const transitionDelay = 27;
-const frameTime = 1000 / 60;
-const minuteTraveralTime = 58000;
-const transitionClass = 'transition';
+const msTransitionDuration = 250;
+const msTransitionDelay = 27;
+
+const msTransitionTime = msTransitionDuration + msTransitionDelay;
+
+const ms1Minute = 60000;
+const msSyncPause = 2000;
+const msSecondsHandTraversal = ms1Minute - msSyncPause;
+
+const ms1Hour = 3600000;
+const ms12Hours = 43200000;
+
+const circle = 360;
 
 const clockHTML = `
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -26,13 +34,6 @@ const clockHTML = `
     .red {
       fill: #BD2420;
       stroke: none;
-    }
-
-    .${transitionClass} {
-      transition-property: transform;
-      transition-duration: ${transitionDuration}ms;
-      transition-delay: ${transitionDelay}ms;
-      transition-timing-function: cubic-bezier(0.4, 2.08, 0.55, 0.44);
     }
   </style>
   <defs>
@@ -84,8 +85,7 @@ const clockHTML = `
 `.trim();
 
 /**
- * @param {ShadowRoot} root
- * @param {LayerData} _
+ * @param {Element} element
  * @param {[
  *  {
  *    default: typeof ui
@@ -94,108 +94,115 @@ const clockHTML = `
  *    default: typeof import('../utils/easing.js')['default']
  *  }
  * ]} esModules
+ * @param {() => void} ready
  */
-const ui = (root, _, esModules) => {
+const ui = (element, esModules, ready) => {
+  const root = element.shadowRoot;
+
   const [, { default: cubicBezier }] = esModules;
-  const transition = cubicBezier(0.4, 2.08, 0.55, 0.44);
+  const transitionSlowHands = cubicBezier(0.4, 2.08, 0.55, 0.44);
+  const transitionSecondsHandStop = cubicBezier(0, 0, 0.58, 1);
+  const transitionSecondsHandStart = cubicBezier(0.42, 0, 1, 1);
 
   const content = document.createRange().createContextualFragment(clockHTML);
   window.requestAnimationFrame(() => {
     root.append(content);
 
-    const secondsHand = root.getElementById('shand');
-    const minutesHand = root.getElementById('mhand');
-    const hoursHand = root.getElementById('hhand');
-
-    /**
-     * @param {number} value
-     * @param {HTMLElement} element
-     * @param {number} base
-     */
-    const setHand = (value, element, base) => {
-      const angle = (value / base) * 360;
-      element.style.transform = `rotate(${angle}deg)`;
-    };
-
-    let oldTime = new Date(0);
+    const elementSecondsHand = root.getElementById('shand');
+    const elementMinutesHand = root.getElementById('mhand');
+    const elementHoursHand = root.getElementById('hhand');
 
     const checkTime = () => {
       const time = new Date();
 
-      const oldMinutes = oldTime.getMinutes();
-      const oldHoursRaw = oldTime.getHours();
-      const oldHours = ((
-        oldHoursRaw > 12 ? oldHoursRaw - 12 : oldHoursRaw) * 60
-      ) + oldMinutes;
+      let pSeconds = 0;
+      let pMinutes = 0;
+      let pHours = 0;
 
-      const minutes = time.getMinutes();
-      const hoursRaw = time.getHours();
-      const hours = ((hoursRaw > 12 ? hoursRaw - 12 : hoursRaw) * 60) + minutes;
-      const milliseconds = (time.getSeconds() * 1000) + time.getMilliseconds();
+      const m = time.getMinutes();
+      const h = time.getHours();
+      const ms = time.getMilliseconds();
 
-      if (
-        milliseconds <= (
-          transitionDuration + transitionDelay + frameTime
+      const msSeconds = time.getSeconds() * 1000;
+      const msSecondFractions = msSeconds + ms;
+
+      const msMinutes = m * ms1Minute;
+
+      const msFullHours = (h * ms1Hour) + msMinutes;
+      const msHours = msFullHours < ms12Hours ? msFullHours : msFullHours - ms12Hours;
+
+      const pStartTransition = msSecondFractions > msTransitionTime
+        ? 0
+        : (
+          msSecondFractions - msTransitionDelay
+        ) / msTransitionDuration;
+
+      if (msSecondFractions <= msTransitionTime) {
+        const pSecondsHandStartTransitionBezier = msSecondFractions <= msTransitionDelay
+          ? 0
+          : transitionSecondsHandStart(pStartTransition);
+        const msSecondsHandStartBezier = pSecondsHandStartTransitionBezier * msTransitionDuration;
+
+        pSeconds = msSecondsHandStartBezier / msSecondsHandTraversal;
+      } else if (
+        msSecondFractions <= (
+          msSecondsHandTraversal - msTransitionDuration
         )
       ) {
-        secondsHand.classList.add(transitionClass);
-        setHand(
-          (transitionDuration + transitionDelay + frameTime),
-          secondsHand,
-          minuteTraveralTime
+        pSeconds = msSecondFractions / msSecondsHandTraversal;
+      } else if (
+        msSecondFractions <= msSecondsHandTraversal
+      ) {
+        const pSecondsHandStopTransition = (
+          msSecondFractions
+          - msSecondsHandTraversal
+          + msTransitionDuration
+        ) / msTransitionDuration;
+        const pSecondsHandStopTransitionBezier = transitionSecondsHandStop(
+          pSecondsHandStopTransition
         );
-      } else if (
-        milliseconds <= (
-          minuteTraveralTime - (
-            transitionDuration + transitionDelay + frameTime
-          )
-        )
-      ) {
-        secondsHand.classList.remove(transitionClass);
-        setHand(milliseconds, secondsHand, minuteTraveralTime);
-      } else if (
-        milliseconds <= minuteTraveralTime
-      ) {
-        secondsHand.classList.add(transitionClass);
-        setHand(minuteTraveralTime, secondsHand, minuteTraveralTime);
+        const msSecondsHandStopBezier = (
+          pSecondsHandStopTransitionBezier * msTransitionDuration
+        );
+
+        pSeconds = (
+          msSecondsHandTraversal
+          - msTransitionDuration
+          + msSecondsHandStopBezier
+        ) / msSecondsHandTraversal;
+      }
+
+      if (msSecondFractions <= msTransitionTime) {
+        const pSlowHandsTransitionBezier = msSecondFractions <= msTransitionDelay
+            ? 0
+            : transitionSlowHands(pStartTransition);
+        const msSlowHandsBezier = pSlowHandsTransitionBezier * ms1Minute;
+
+        pMinutes = (
+          msMinutes
+          - ms1Minute
+          + msSlowHandsBezier
+        ) / ms1Hour;
+        pHours = (
+          msHours
+          - ms1Minute
+          + msSlowHandsBezier
+        ) / ms12Hours;
       } else {
-        secondsHand.classList.remove(transitionClass);
-        setHand(0, secondsHand, minuteTraveralTime);
+        pMinutes = msMinutes / ms1Hour;
+        pHours = msHours / ms12Hours;
       }
 
-      if (
-        minutes === 59
-        && milliseconds > (
-          transitionDuration + transitionDelay + frameTime
-        )
-      ) {
-        minutesHand.classList.remove(transitionClass);
-        setHand(-1, minutesHand, 60);
-      } else if (oldMinutes !== minutes) {
-        minutesHand.classList.add(transitionClass);
-        setHand(minutes, minutesHand, 60);
-      }
+      elementSecondsHand.style.transform = `rotate(${pSeconds * circle}deg)`;
+      elementMinutesHand.style.transform = `rotate(${pMinutes * circle}deg)`;
+      elementHoursHand.style.transform = `rotate(${pHours * circle}deg)`;
 
-      if (
-        hours === 719
-        && minutes === 59
-        && milliseconds > (
-          transitionDuration + transitionDelay + frameTime
-        )
-      ) {
-        hoursHand.classList.remove(transitionClass);
-        setHand(-1, hoursHand, 720);
-      } else if (oldHours !== hours) {
-        hoursHand.classList.add(transitionClass);
-        setHand(hours, hoursHand, 720);
-      }
-
-      oldTime = time;
-
-      window.requestAnimationFrame(checkTime);
+      if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
     };
 
     checkTime();
+
+    ready();
   });
 };
 
