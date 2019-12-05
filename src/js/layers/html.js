@@ -1,12 +1,12 @@
 /**
- * @param {Element} root
+ * @param {HTMLElement} element
  * @param {LayerData} _
  * @param {AssetData[]} assets
  */
-export const htmlLayer = (root, _, assets) => {
+export const htmlLayer = (element, _, assets) => {
   const [document] = assets;
 
-  root.innerHTML = `
+  element.innerHTML = `
     <iframe src="${document.url}"></iframe>
   `;
 };

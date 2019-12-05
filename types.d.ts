@@ -1,30 +1,34 @@
 declare type AssetData = {
-  hash?: string;
-  id?: string;
-  MIMEType?: string;
-  type?: string;
-  url?: string;
+  readonly hash?: string;
+  readonly id?: string;
+  readonly MIMEType?: string;
+  readonly type?: string;
+  readonly url?: string;
 
 };
 
 declare type LayerData = {
-  assets?: string[];
-  classNames?: string;
-  id?: string;
-  slide?: string;
-  state?: any;
-  type?: string;
+  readonly assets?: string[];
+  readonly id?: string;
+  readonly slide?: string;
+  readonly state?: any;
+  readonly type?: string;
 };
 
 declare type UpdateData = {
-  assets: AssetData[];
-  layers: LayerData[];
+  readonly assets: AssetData[];
+  readonly layers: LayerData[];
 };
 
 declare type MessageData = {
-  type: 'update';
-  data: UpdateData;
+  readonly type: 'update';
+  readonly data: UpdateData;
 } | {
-  type: 'keepalive';
-  data: null
+  readonly type: 'keepalive';
+  readonly data: null
+};
+
+declare type UfiLayerElement = HTMLElement & {
+  ufiState: any;
+  ufiStateCallback: (state: any) => void | null;
 };

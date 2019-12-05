@@ -1,12 +1,12 @@
 /**
- * @param {Element} root
+ * @param {HTMLElement} element
  * @param {LayerData} _
  * @param {AssetData[]} assets
  */
-export const imageLayer = (root, _, assets) => {
+export const imageLayer = (element, _, assets) => {
   const [image] = assets;
 
-  root.innerHTML = `
+  element.innerHTML = `
     <img src="${image.url}" />
   `;
 };

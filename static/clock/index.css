@@ -4,7 +4,27 @@
 }
 
 #clock {
-  width: 90vw;
-  height: 90vh;
-  margin: 10vmax;
+  width: 100%;
+  height: 100%;
+}
+
+#border {
+  fill: white;
+  stroke: lightgrey;
+  stroke-width: 64;
+}
+
+#center {
+  fill: gold;
+  stroke: none;
+}
+
+.black {
+  fill: black;
+  stroke: none;
+}
+
+.red {
+  fill: #BD2420;
+  stroke: none;
 }

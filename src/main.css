@@ -20,13 +20,39 @@ body {
 }
 
 ufi-layer {
+  --column-width: calc(100vw / var(--column-count));
+  --row-height: calc(100vh / var(--row-count));
+
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin: unset;
-  padding: unset;
+  top: calc(
+    (
+      var(--row-from)
+      - 1
+    )
+    * var(--row-height)
+  );
+  right: calc(
+    (
+      var(--column-count)
+      - var(--column-to)
+    )
+    * var(--column-width)
+  );
+  bottom: calc(
+    (
+      var(--row-count)
+      - var(--row-to)
+    )
+    * var(--row-height)
+  );
+  left: calc(
+    (
+      var(--column-from)
+      - 1
+    )
+    * var(--column-width)
+  );
+  background-color: var(--background-color);
 }
 
 ufi-layer.left-half {
@@ -56,4 +82,17 @@ ufi-layer[ufi-type="html"] > iframe {
   height: 100%;
   border: none;
   outline: none;
+}
+
+ufi-layer[ufi-type="module"] {
+  opacity: 0;
+}
+ufi-layer[ufi-type="module"][ready] {
+  opacity: unset;
+}
+
+ufi-layer[ufi-type="video"] > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

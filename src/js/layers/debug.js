@@ -19,12 +19,12 @@
  */
 
 /**
- * @param {Element} root
+ * @param {HTMLElement} element
  * @param {LayerData} data
  * @param {AssetData[]} assets
  */
-export const debugLayer = (root, { id, type }, assets) => {
-  root.innerHTML = `
+export const debugLayer = (element, { id, type }, assets) => {
+  element.innerHTML = `
     <h2>id: ${id}</h2>
     <h3>type: ${type}</h3>
 

@@ -14,28 +14,6 @@ const circle = 360;
 
 const clockHTML = `
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <style type="text/css">
-    #border {
-      fill: white;
-      stroke: lightgrey;
-      stroke-width: 64;
-    }
-
-    #center {
-      fill: gold;
-      stroke: none;
-    }
-
-    .black {
-      fill: black;
-      stroke: none;
-    }
-
-    .red {
-      fill: #BD2420;
-      stroke: none;
-    }
-  </style>
   <defs>
     <path id="mark1" d="M -40,-1000 l 80,0 0,245 -80,0 z" />
     <path id="mark2" d="M -15,-1000 l 30,0 0,80 -30,0 z" />
@@ -85,7 +63,7 @@ const clockHTML = `
 `.trim();
 
 /**
- * @param {Element} element
+ * @param {UfiLayerElement} element
  * @param {[
  *  {
  *    default: typeof ui
@@ -94,116 +72,123 @@ const clockHTML = `
  *    default: typeof import('../utils/easing.js')['default']
  *  }
  * ]} esModules
- * @param {() => void} ready
  */
-const ui = (element, esModules, ready) => {
-  const root = element.shadowRoot;
-
-  const [, { default: cubicBezier }] = esModules;
-  const transitionSlowHands = cubicBezier(0.4, 2.08, 0.55, 0.44);
-  const transitionSecondsHandStop = cubicBezier(0, 0, 0.58, 1);
-  const transitionSecondsHandStart = cubicBezier(0.42, 0, 1, 1);
-
-  const content = document.createRange().createContextualFragment(clockHTML);
-  window.requestAnimationFrame(() => {
-    root.append(content);
-
-    const elementSecondsHand = root.getElementById('shand');
-    const elementMinutesHand = root.getElementById('mhand');
-    const elementHoursHand = root.getElementById('hhand');
-
-    const checkTime = () => {
-      const time = new Date();
-
-      let pSeconds = 0;
-      let pMinutes = 0;
-      let pHours = 0;
-
-      const m = time.getMinutes();
-      const h = time.getHours();
-      const ms = time.getMilliseconds();
-
-      const msSeconds = time.getSeconds() * 1000;
-      const msSecondFractions = msSeconds + ms;
-
-      const msMinutes = m * ms1Minute;
-
-      const msFullHours = (h * ms1Hour) + msMinutes;
-      const msHours = msFullHours < ms12Hours ? msFullHours : msFullHours - ms12Hours;
-
-      const pStartTransition = msSecondFractions > msTransitionTime
-        ? 0
-        : (
-          msSecondFractions - msTransitionDelay
-        ) / msTransitionDuration;
-
-      if (msSecondFractions <= msTransitionTime) {
-        const pSecondsHandStartTransitionBezier = msSecondFractions <= msTransitionDelay
-          ? 0
-          : transitionSecondsHandStart(pStartTransition);
-        const msSecondsHandStartBezier = pSecondsHandStartTransitionBezier * msTransitionDuration;
-
-        pSeconds = msSecondsHandStartBezier / msSecondsHandTraversal;
-      } else if (
-        msSecondFractions <= (
-          msSecondsHandTraversal - msTransitionDuration
-        )
-      ) {
-        pSeconds = msSecondFractions / msSecondsHandTraversal;
-      } else if (
-        msSecondFractions <= msSecondsHandTraversal
-      ) {
-        const pSecondsHandStopTransition = (
-          msSecondFractions
-          - msSecondsHandTraversal
-          + msTransitionDuration
-        ) / msTransitionDuration;
-        const pSecondsHandStopTransitionBezier = transitionSecondsHandStop(
-          pSecondsHandStopTransition
-        );
-        const msSecondsHandStopBezier = (
-          pSecondsHandStopTransitionBezier * msTransitionDuration
-        );
-
-        pSeconds = (
-          msSecondsHandTraversal
-          - msTransitionDuration
-          + msSecondsHandStopBezier
-        ) / msSecondsHandTraversal;
-      }
-
-      if (msSecondFractions <= msTransitionTime) {
-        const pSlowHandsTransitionBezier = msSecondFractions <= msTransitionDelay
-            ? 0
-            : transitionSlowHands(pStartTransition);
-        const msSlowHandsBezier = pSlowHandsTransitionBezier * ms1Minute;
-
-        pMinutes = (
-          msMinutes
-          - ms1Minute
-          + msSlowHandsBezier
-        ) / ms1Hour;
-        pHours = (
-          msHours
-          - ms1Minute
-          + msSlowHandsBezier
-        ) / ms12Hours;
-      } else {
-        pMinutes = msMinutes / ms1Hour;
-        pHours = msHours / ms12Hours;
-      }
-
-      elementSecondsHand.style.transform = `rotate(${pSeconds * circle}deg)`;
-      elementMinutesHand.style.transform = `rotate(${pMinutes * circle}deg)`;
-      elementHoursHand.style.transform = `rotate(${pHours * circle}deg)`;
-
-      if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+const ui = (element, esModules) => (
+  new Promise((resolve) => {
+    let state = null;
+    const stateCallback = () => {
+      state = element.ufiState || state;
     };
+    element.ufiStateCallback = stateCallback;
+    stateCallback();
 
-    checkTime();
+    const root = element.shadowRoot;
 
-    ready();
-  });
-};
+    const [, { default: cubicBezier }] = esModules;
+    const transitionSlowHands = cubicBezier(0.4, 2.08, 0.55, 0.44);
+    const transitionSecondsHandStop = cubicBezier(0, 0, 0.58, 1);
+    const transitionSecondsHandStart = cubicBezier(0.42, 0, 1, 1);
+
+    const content = document.createRange().createContextualFragment(clockHTML);
+    window.requestAnimationFrame(() => {
+      root.append(content);
+
+      const elementSecondsHand = root.getElementById('shand');
+      const elementMinutesHand = root.getElementById('mhand');
+      const elementHoursHand = root.getElementById('hhand');
+
+      const checkTime = () => {
+        const time = new Date();
+
+        let pSeconds = 0;
+        let pMinutes = 0;
+        let pHours = 0;
+
+        const m = time.getMinutes();
+        const h = time.getHours();
+        const ms = time.getMilliseconds();
+
+        const msSeconds = time.getSeconds() * 1000;
+        const msSecondFractions = msSeconds + ms;
+
+        const msMinutes = m * ms1Minute;
+
+        const msFullHours = (h * ms1Hour) + msMinutes;
+        const msHours = msFullHours < ms12Hours ? msFullHours : msFullHours - ms12Hours;
+
+        const pStartTransition = msSecondFractions > msTransitionTime
+          ? 0
+          : (
+            msSecondFractions - msTransitionDelay
+          ) / msTransitionDuration;
+
+        if (msSecondFractions <= msTransitionTime) {
+          const pSecondsHandStartTransitionBezier = msSecondFractions <= msTransitionDelay
+            ? 0
+            : transitionSecondsHandStart(pStartTransition);
+          const msSecondsHandStartBezier = pSecondsHandStartTransitionBezier * msTransitionDuration;
+
+          pSeconds = msSecondsHandStartBezier / msSecondsHandTraversal;
+        } else if (
+          msSecondFractions <= (
+            msSecondsHandTraversal - msTransitionDuration
+          )
+        ) {
+          pSeconds = msSecondFractions / msSecondsHandTraversal;
+        } else if (
+          msSecondFractions <= msSecondsHandTraversal
+        ) {
+          const pSecondsHandStopTransition = (
+            msSecondFractions
+            - msSecondsHandTraversal
+            + msTransitionDuration
+          ) / msTransitionDuration;
+          const pSecondsHandStopTransitionBezier = transitionSecondsHandStop(
+            pSecondsHandStopTransition
+          );
+          const msSecondsHandStopBezier = (
+            pSecondsHandStopTransitionBezier * msTransitionDuration
+          );
+
+          pSeconds = (
+            msSecondsHandTraversal
+            - msTransitionDuration
+            + msSecondsHandStopBezier
+          ) / msSecondsHandTraversal;
+        }
+
+        if (msSecondFractions <= msTransitionTime) {
+          const pSlowHandsTransitionBezier = msSecondFractions <= msTransitionDelay
+              ? 0
+              : transitionSlowHands(pStartTransition);
+          const msSlowHandsBezier = pSlowHandsTransitionBezier * ms1Minute;
+
+          pMinutes = (
+            msMinutes
+            - ms1Minute
+            + msSlowHandsBezier
+          ) / ms1Hour;
+          pHours = (
+            msHours
+            - ms1Minute
+            + msSlowHandsBezier
+          ) / ms12Hours;
+        } else {
+          pMinutes = msMinutes / ms1Hour;
+          pHours = msHours / ms12Hours;
+        }
+
+        elementSecondsHand.style.transform = `rotate(${pSeconds * circle}deg)`;
+        elementMinutesHand.style.transform = `rotate(${pMinutes * circle}deg)`;
+        elementHoursHand.style.transform = `rotate(${pHours * circle}deg)`;
+
+        if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+      };
+
+      checkTime();
+      resolve();
+    });
+  })
+);
 
 export default ui;

@@ -1,11 +1,17 @@
 import { dynamicImport } from '../dynamicImport.js';
 
 /**
- * @param {Element} root
- * @param {LayerData} data
+ * @param {HTMLElement} element
+ * @param {LayerData} _
  * @param {AssetData[]} assets
  */
-export const moduleLayer = (root, data, assets) => {
+export const moduleLayer = (element, _, assets) => {
+  const ready = () => {
+    window.requestAnimationFrame(() => {
+      element.setAttribute('ready', '');
+    });
+  };
+
   const esModulesLoading = Promise.all(assets.filter(
     ({ type, url }) => type === 'modulepreload' && url
   ).map(
@@ -35,14 +41,14 @@ export const moduleLayer = (root, data, assets) => {
     )
     : null;
 
-  root.attachShadow({ mode: 'open' });
-  if (stylesheetElement) root.shadowRoot.append(stylesheetElement);
+  element.attachShadow({ mode: 'open' });
+  if (stylesheetElement) element.shadowRoot.append(stylesheetElement);
 
   esModulesLoading.then((esModules) => {
     if (!esModules.length) return;
 
     const [{ default: render }] = esModules;
 
-    render(root.shadowRoot, data, esModules);
+    render(element, esModules).then(ready);
   });
 };

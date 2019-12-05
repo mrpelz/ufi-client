@@ -2,6 +2,7 @@ import { debugLayer } from './layers/debug.js';
 import { htmlLayer } from './layers/html.js';
 import { imageLayer } from './layers/image.js';
 import { moduleLayer } from './layers/module.js';
+import { videoLayer } from './layers/video.js';
 
 // DEBUG START
 let pause = false;
@@ -30,8 +31,45 @@ const layerTypes = {
   debug: debugLayer,
   html: htmlLayer,
   image: imageLayer,
-  module: moduleLayer
+  module: moduleLayer,
+  video: videoLayer
 };
+
+/**
+ * @param {any} input
+ */
+function isObject(input) {
+  return input instanceof Object
+    && !(input instanceof Function);
+}
+
+/**
+ * @param {Object} target
+ * @param {Object} source
+ * @returns {boolean}
+ */
+function deepEqual(target, source) {
+  if (!isObject(source) || !isObject(target)) {
+    return source === target;
+  }
+
+  if (Array.isArray(source)) {
+    if (!Array.isArray(target)) return false;
+
+    return source.every((sourceValue, index) => {
+      const { [index]: targetValue } = target;
+
+      return deepEqual(targetValue, sourceValue);
+    });
+  }
+
+  return Object.keys(source).every((prop) => {
+    const { [prop]: targetValue } = target;
+    const { [prop]: sourceValue } = source;
+
+    return deepEqual(targetValue, sourceValue);
+  });
+}
 
 /**
  * @param {{
@@ -82,7 +120,15 @@ function createLayer(data, assets) {
     type
   } = data;
 
-  const element = document.createElement(layerSelector);
+  const element = /** @type {UfiLayerElement} */ (document.createElement(layerSelector));
+  Object.defineProperty(element, 'ufiState', {
+    value: null,
+    writable: true
+  });
+  Object.defineProperty(element, 'ufiStateCallback', {
+    value: null,
+    writable: true
+  });
 
   if (id) element.id = id;
   if (type) element.setAttribute('ufi-type', type);
@@ -100,19 +146,94 @@ function createLayer(data, assets) {
 }
 
 /**
- * @param {Element} element
+ * @param {UfiLayerElement} element
  * @param {LayerData} data
  */
 function updateLayer(element, data) {
+  const columns = 12;
+  const rows = 12;
+
   const {
-    classNames,
-    state
+    state,
+    state: {
+      layout: {
+        backgroundColor = 'none',
+        spanColumns = null,
+        spanRows = null,
+        alignX = null,
+        alignY = null,
+        fromColumn = null,
+        fromRow = null,
+        toColumn = null,
+        toRow = null
+      } = {}
+    } = {}
   } = data;
-  if (classNames) element.className = classNames;
-  if (state) element.dispatchEvent(new Event('state', {
-    'bubbles': false,
-    'cancelable': false
-  }));
+
+  element.style.setProperty('--column-count', columns.toString(10));
+  element.style.setProperty('--row-count', rows.toString(10));
+
+  element.style.setProperty('--background-color', backgroundColor);
+
+  if (fromColumn && toColumn) {
+    element.style.setProperty('--column-from', fromColumn.toString(10));
+    element.style.setProperty('--column-to', toColumn.toString(10));
+  } else {
+    const margin = columns - spanColumns;
+
+    if (alignX === 'left') {
+      const marginRight = columns - margin;
+
+      element.style.setProperty('--column-from', '1');
+      element.style.setProperty('--column-to', marginRight.toString(10));
+    } else if (alignX === 'right') {
+      const marginLeft = margin + 1;
+
+      element.style.setProperty('--column-from', marginLeft.toString(10));
+      element.style.setProperty('--column-to', columns.toString(10));
+    } else {
+      const marginLeft = Math.floor(margin / 2) + 1;
+      const marginRight = columns - Math.ceil(margin / 2);
+
+      element.style.setProperty('--column-from', marginLeft.toString(10));
+      element.style.setProperty('--column-to', marginRight.toString(10));
+    }
+  }
+
+  if (fromRow && toRow) {
+    element.style.setProperty('--row-from', fromRow.toString(10));
+    element.style.setProperty('--row-to', toRow.toString(10));
+  } else {
+    const margin = rows - spanRows;
+
+    if (alignY === 'top') {
+      const marginBottom = columns - margin;
+
+      element.style.setProperty('--row-from', '1');
+      element.style.setProperty('--row-to', marginBottom.toString(10));
+    } else if (alignY === 'bottom') {
+      const marginTop = margin + 1;
+
+      element.style.setProperty('--row-from', marginTop.toString(10));
+      element.style.setProperty('--row-to', rows.toString(10));
+    } else {
+      const marginTop = Math.floor(margin / 2) + 1;
+      const marginBottom = rows - Math.ceil(margin / 2);
+
+      element.style.setProperty('--row-from', marginTop.toString(10));
+      element.style.setProperty('--row-to', marginBottom.toString(10));
+    }
+  }
+
+  element.ufiState = state;
+
+  // @ts-ignore
+  const { ufiStateCallback } = element;
+  if (ufiStateCallback && ufiStateCallback instanceof Function) {
+    return ufiStateCallback(state);
+  }
+
+  return null;
 }
 
 /**
@@ -124,29 +245,29 @@ function updateLayer(element, data) {
  * }} movement
  * @param {AssetData[]} assets
  */
-function handleLayers(movement, assets) {
-  const newLayers = movement.create.map((data) => {
+function handleLayers({ create, update, delete: del, order }, assets) {
+  const newLayers = create.map((data) => {
     const element = createLayer(data, assets);
     updateLayer(element, data);
 
     return element;
   });
 
-  movement.delete.forEach(({ id }) => {
-    const element = body.querySelector(`#${CSS.escape(id)}`);
-    if (element) element.remove();
-  });
-
-  movement.update.forEach((data) => {
+  update.forEach((data) => {
     const { id } = data;
 
-    const element = body.querySelector(`#${CSS.escape(id)}`);
-    if (!element) return;
+    const element = /** @type {UfiLayerElement} */ (body.querySelector(`#${CSS.escape(id)}`));
+    if (!element || !(element instanceof HTMLElement)) return;
 
     updateLayer(element, data);
   });
 
-  const orderedLayers = movement.order.map(
+  del.forEach(({ id }) => {
+    const element = body.querySelector(`#${CSS.escape(id)}`);
+    if (element) element.remove();
+  });
+
+  const orderedLayers = order.map(
     (id) => [
       ...newLayers,
       ...Array.from(body.querySelectorAll(layerSelector))
@@ -158,42 +279,6 @@ function handleLayers(movement, assets) {
   window.requestAnimationFrame(() => {
     body.append(...orderedLayers);
     body.normalize();
-  });
-}
-
-/**
- * @param {any} input
- */
-function isObject(input) {
-  return input instanceof Object
-    && !(input instanceof Function);
-}
-
-/**
- * @param {Object} target
- * @param {Object} source
- * @returns {boolean}
- */
-function deepEqual(target, source) {
-  if (!isObject(source) || !isObject(target)) {
-    return source === target;
-  }
-
-  if (Array.isArray(source)) {
-    if (!Array.isArray(target)) return false;
-
-    return source.every((sourceValue, index) => {
-      const { [index]: targetValue } = target;
-
-      return deepEqual(targetValue, sourceValue);
-    });
-  }
-
-  return Object.keys(source).every((prop) => {
-    const { [prop]: targetValue } = target;
-    const { [prop]: sourceValue } = source;
-
-    return deepEqual(targetValue, sourceValue);
   });
 }
 
@@ -233,10 +318,7 @@ function calculateMovements(oldData, newData) {
           );
 
           if (!oldLayer) return false;
-          if (
-            (oldLayer.classNames === newLayer.classNames)
-            && deepEqual(oldLayer.state, newLayer.state)
-          ) return false;
+          if (deepEqual(oldLayer.state, newLayer.state)) return false;
 
           return true;
         }
@@ -272,6 +354,8 @@ function handleMessage({ data: payload }) {
   }
 
   if (incoming.type !== 'update') return;
+
+  console.log(incoming.data);
 
   /**
    * @type {UpdateData}
