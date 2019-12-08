@@ -355,8 +355,6 @@ function handleMessage({ data: payload }) {
 
   if (incoming.type !== 'update') return;
 
-  console.log(incoming.data);
-
   /**
    * @type {UpdateData}
    */

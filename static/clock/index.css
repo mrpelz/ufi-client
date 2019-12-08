@@ -8,23 +8,38 @@
   height: 100%;
 }
 
-#border {
-  fill: white;
-  stroke: lightgrey;
-  stroke-width: 64;
+#handh {
+  fill: var(--hours-hand-color);
+  stroke: none;
+}
+
+#handm {
+  fill: var(--minutes-hand-color);
+  stroke: none;
+}
+
+#hands {
+  fill: var(--seconds-hand-color);
+  stroke: none;
+}
+
+#face {
+  fill: var(--face-color);
+  stroke: none;
+}
+
+#label {
+  fill: var(--label-color);
+  stroke: none;
+}
+
+#base {
+  fill: var(--fill-color);
+  stroke: var(--border-color);
+  stroke-width: var(--border-width);
 }
 
 #center {
-  fill: gold;
-  stroke: none;
-}
-
-.black {
-  fill: black;
-  stroke: none;
-}
-
-.red {
-  fill: #BD2420;
+  fill: var(--center-color);
   stroke: none;
 }
