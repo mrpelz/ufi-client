@@ -374,7 +374,15 @@ export function app() {
   const stream = new EventSource(streamUrl.toString());
   stream.onmessage = handleMessage;
 
+  const fullscreen = () => {
+    // eslint-disable-next-line no-console
+    document.documentElement.requestFullscreen().catch((error) => console.log(error));
+  };
+
+  fullscreen();
+  document.documentElement.onclick = fullscreen;
+
   window.setInterval(() => {
     if (stream.readyState === stream.CLOSED) window.location.reload(true);
-  }, 5000);
+  }, 60000);
 }
