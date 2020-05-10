@@ -72,6 +72,13 @@ function deepEqual(target, source) {
 }
 
 /**
+ * @param {boolean} on
+ */
+function screen(on) {
+  fetch(`http://localhost/${on ? 'on' : 'off'}`, { method: 'POST' }).catch(() => { });
+}
+
+/**
  * @param {{
  *  create: AssetData[],
  *  delete: AssetData[],
@@ -362,6 +369,8 @@ function handleMessage({ data: payload }) {
 
   const movements = calculateMovements(data, newData);
   data = newData;
+
+  screen(Boolean(data.layers.length));
 
   handleAssets(movements.assets);
   handleLayers(movements.layers, data.assets);
