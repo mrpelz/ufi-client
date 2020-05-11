@@ -1,15 +1,28 @@
-const msTransitionDuration = 250;
-const msTransitionDelay = 27;
+/**
+ * @typedef ClockOptions
+ * @type {{
+ *  style: {
+ *    borderColor: string,
+ *    borderWidth: number,
+ *    centerColor: string,
+ *    faceColor: string,
+ *    fillColor: string,
+ *    hoursHandColor: string,
+ *    labelColor: string,
+ *    minutesHandColor: string,
+ *    secondsHandColor: string
+ *  },
+ *  config: {
+ *    msSyncPause: number,
+ *    msTransitionDelay: number,
+ *    msTransitionDuration: number
+ *  }
+ * }}
+ */
 
-const msTransitionTime = msTransitionDuration + msTransitionDelay;
-
-const ms1Minute = 60000;
-const msSyncPause = 2000;
-const msSecondsHandTraversal = ms1Minute - msSyncPause;
-
-const ms1Hour = 3600000;
 const ms12Hours = 43200000;
-
+const ms1Hour = 3600000;
+const ms1Minute = 60000;
 const circle = 360;
 
 const clockHTML = `
@@ -72,32 +85,73 @@ const clockHTML = `
  */
 const ui = (element, esModules) => (
   new Promise((resolve) => {
+
+    /**
+     * @type {ClockOptions}
+     */
+    let options = {
+      style: {
+        borderColor: 'lightgrey',
+        borderWidth: 64,
+        centerColor: 'gold',
+        faceColor: 'black',
+        fillColor: 'white',
+        hoursHandColor: 'black',
+        labelColor: 'black',
+        minutesHandColor: 'black',
+        secondsHandColor: '#BD2420'
+      },
+      config: {
+        msSyncPause: 2000,
+        msTransitionDelay: 27,
+        msTransitionDuration: 250
+      }
+    };
+
     const stateCallback = () => {
-      const {
-        borderColor = 'lightgrey',
-        borderWidth = 64,
-        centerColor = 'gold',
-        faceColor = 'black',
-        fillColor = 'white',
-        labelColor = 'black',
-        hoursHandColor,
-        minutesHandColor,
-        secondsHandColor
-      } = (
+
+      /**
+       * @type {ClockOptions}
+       */
+      const newOptions = (
         element.ufiState.data instanceof Object
         && element.ufiState.data
       ) || {};
 
+      options = {
+        style: {
+          ...options.style,
+          ...newOptions.style
+        },
+        config: {
+          ...options.config,
+          ...newOptions.config
+        }
+      };
+
+      const {
+        borderColor,
+        borderWidth,
+        centerColor,
+        faceColor,
+        fillColor,
+        labelColor,
+        hoursHandColor,
+        minutesHandColor,
+        secondsHandColor
+      } = options.style;
+
       element.style.setProperty('--border-color', borderColor || 'none');
-      element.style.setProperty('--border-width', borderWidth || '0');
+      element.style.setProperty('--border-width', borderWidth.toString() || '0');
       element.style.setProperty('--center-color', centerColor || 'none');
       element.style.setProperty('--face-color', faceColor || 'none');
       element.style.setProperty('--fill-color', fillColor || 'none');
       element.style.setProperty('--label-color', labelColor || 'none');
-      element.style.setProperty('--hours-hand-color', hoursHandColor || 'black');
-      element.style.setProperty('--minutes-hand-color', minutesHandColor || 'black');
-      element.style.setProperty('--seconds-hand-color', secondsHandColor || '#BD2420');
+      element.style.setProperty('--hours-hand-color', hoursHandColor || 'none');
+      element.style.setProperty('--minutes-hand-color', minutesHandColor || 'none');
+      element.style.setProperty('--seconds-hand-color', secondsHandColor || 'none');
     };
+
     element.ufiStateCallback = stateCallback;
     stateCallback();
 
@@ -117,6 +171,15 @@ const ui = (element, esModules) => (
       const elementHoursHand = root.getElementById('hhand');
 
       const checkTime = () => {
+        const {
+          msSyncPause,
+          msTransitionDelay,
+          msTransitionDuration
+        } = options.config;
+
+        const msTransitionTime = msTransitionDuration + msTransitionDelay;
+        const msSecondsHandTraversal = ms1Minute - msSyncPause;
+
         const time = new Date();
 
         let pSeconds = 0;
@@ -162,9 +225,11 @@ const ui = (element, esModules) => (
             - msSecondsHandTraversal
             + msTransitionDuration
           ) / msTransitionDuration;
+
           const pSecondsHandStopTransitionBezier = transitionSecondsHandStop(
             pSecondsHandStopTransition
           );
+
           const msSecondsHandStopBezier = (
             pSecondsHandStopTransitionBezier * msTransitionDuration
           );
@@ -178,8 +243,9 @@ const ui = (element, esModules) => (
 
         if (msSecondFractions <= msTransitionTime) {
           const pSlowHandsTransitionBezier = msSecondFractions <= msTransitionDelay
-              ? 0
-              : transitionSlowHands(pStartTransition);
+            ? 0
+            : transitionSlowHands(pStartTransition);
+
           const msSlowHandsBezier = pSlowHandsTransitionBezier * ms1Minute;
 
           pMinutes = (
@@ -187,6 +253,7 @@ const ui = (element, esModules) => (
             - ms1Minute
             + msSlowHandsBezier
           ) / ms1Hour;
+
           pHours = (
             msHours
             - ms1Minute
