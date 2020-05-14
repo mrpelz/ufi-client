@@ -8,22 +8,22 @@
   height: 100%;
 }
 
-#handh {
+#hand-hours {
   fill: var(--hours-hand-color);
   stroke: none;
 }
 
-#handm {
+#hand-minutes {
   fill: var(--minutes-hand-color);
   stroke: none;
 }
 
-#hands {
+#hand-seconds {
   fill: var(--seconds-hand-color);
   stroke: none;
 }
 
-#face {
+#face-full {
   fill: var(--face-color);
   stroke: none;
 }

@@ -13,6 +13,9 @@
  *    secondsHandColor: string
  *  },
  *  config: {
+ *    trackSecondsHand: 'frames' | 'seconds',
+ *    trackMinutesHand: 'frames' | 'seconds' | 'minutes',
+ *    trackHoursHand: 'frames' | 'seconds' | 'minutes' | 'hours',
  *    msSyncPause: number,
  *    msTransitionDelay: number,
  *    msTransitionDuration: number
@@ -28,28 +31,28 @@ const circle = 360;
 const clockHTML = `
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
-    <path id="mark1" d="M -40,-1000 l 80,0 0,245 -80,0 z" />
-    <path id="mark2" d="M -15,-1000 l 30,0 0,80 -30,0 z" />
-    <path id="handh" d="M -50,-650 l 100,0 10,890 -120,0 z" />
-    <path id="handm" d="M -40,-950 l 80,0 10,1200 -100,0 z" />
-    <path id="hands" d="m 0,-750 a 105,105 0 0 1 0,210 105,105 0 0 1 0,-210 z m -20,200 h 30 l 7,890 h -30 z" />
-    <g id="face1">
-      <use xlink:href="#mark1" />
-      <use xlink:href="#mark2" transform="rotate(06)" />
-      <use xlink:href="#mark2" transform="rotate(12)" />
-      <use xlink:href="#mark2" transform="rotate(18)" />
-      <use xlink:href="#mark2" transform="rotate(24)" />
+    <path id="mark-large" d="M -40,-1000 l 80,0 0,245 -80,0 z" />
+    <path id="mark-small" d="M -15,-1000 l 30,0 0,80 -30,0 z" />
+    <path id="hand-hours" d="M -50,-650 l 100,0 10,890 -120,0 z" />
+    <path id="hand-minutes" d="M -40,-950 l 80,0 10,1200 -100,0 z" />
+    <path id="hand-seconds" d="m 0,-750 a 105,105 0 0 1 0,210 105,105 0 0 1 0,-210 z m -20,200 h 30 l 7,890 h -30 z" />
+    <g id="face-5min">
+      <use xlink:href="#mark-large" />
+      <use xlink:href="#mark-small" transform="rotate(06)" />
+      <use xlink:href="#mark-small" transform="rotate(12)" />
+      <use xlink:href="#mark-small" transform="rotate(18)" />
+      <use xlink:href="#mark-small" transform="rotate(24)" />
     </g>
-    <g id="face2">
-      <use xlink:href="#face1" />
-      <use xlink:href="#face1" transform="rotate(30)" />
-      <use xlink:href="#face1" transform="rotate(60)" />
+    <g id="face-15min">
+      <use xlink:href="#face-5min" />
+      <use xlink:href="#face-5min" transform="rotate(30)" />
+      <use xlink:href="#face-5min" transform="rotate(60)" />
     </g>
-    <g id="face">
-      <use xlink:href="#face2" />
-      <use xlink:href="#face2" transform="rotate(90)" />
-      <use xlink:href="#face2" transform="rotate(180)" />
-      <use xlink:href="#face2" transform="rotate(270)" />
+    <g id="face-full">
+      <use xlink:href="#face-15min" />
+      <use xlink:href="#face-15min" transform="rotate(90)" />
+      <use xlink:href="#face-15min" transform="rotate(180)" />
+      <use xlink:href="#face-15min" transform="rotate(270)" />
     </g>
     <g id="label">
       <path
@@ -64,10 +67,10 @@ const clockHTML = `
   </defs>
   <use xlink:href="#base" />
   <use xlink:href="#label" />
-  <use xlink:href="#face" />
-  <use xlink:href="#handh" id="hhand" />
-  <use xlink:href="#handm" id="mhand" />
-  <use xlink:href="#hands" id="shand" />
+  <use xlink:href="#face-full" />
+  <use xlink:href="#hand-hours" id="handle-hours" />
+  <use xlink:href="#hand-minutes" id="handle-minutes" />
+  <use xlink:href="#hand-seconds" id="handle-seconds" />
   <use xlink:href="#center" />
 </svg>
 `.trim();
@@ -102,6 +105,9 @@ const ui = (element, esModules) => (
         secondsHandColor: '#BD2420'
       },
       config: {
+        trackSecondsHand: 'frames',
+        trackMinutesHand: 'minutes',
+        trackHoursHand: 'minutes',
         msSyncPause: 2000,
         msTransitionDelay: 27,
         msTransitionDuration: 250
@@ -166,9 +172,9 @@ const ui = (element, esModules) => (
     window.requestAnimationFrame(() => {
       root.append(content);
 
-      const elementSecondsHand = root.getElementById('shand');
-      const elementMinutesHand = root.getElementById('mhand');
-      const elementHoursHand = root.getElementById('hhand');
+      const elementSecondsHand = root.getElementById('handle-seconds');
+      const elementMinutesHand = root.getElementById('handle-minutes');
+      const elementHoursHand = root.getElementById('handle-hours');
 
       const checkTime = () => {
         const {
