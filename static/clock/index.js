@@ -17,20 +17,23 @@
  *    secondsHandColor: string
  *  },
  *  config: {
- *    trackSecondsHand: 'seconds' | 'frames',
- *    trackMinutesHand: 'minutes' | 'seconds' | 'frames',
- *    trackHoursHand: 'hours' | 'minutes' | 'seconds' | 'frames',
+ *    msDSTStepDuration: number,
  *    msSyncPause: number,
- *    msTransitionDuration: number
+ *    msTransitionDuration: number,
+ *    trackHoursHand: 'hours' | 'minutes' | 'seconds' | 'frames',
+ *    trackMinutesHand: 'minutes' | 'seconds' | 'frames',
+ *    trackSecondsHand: 'seconds' | 'frames'
  *  }
  * }}
  */
 
-const ms12Hours = 43200000;
-const ms1Hour = 3600000;
-const ms1Minute = 60000;
-const ms1Second = 1000;
-const circle = 360;
+const DEG_CIRCLE = 360;
+const MS_12_HOURS = 43200000;
+const MS_1_HOUR = 3600000;
+const MS_1_MINUTE = 60000;
+const MS_1_SECOND = 1000;
+const MS_DST_BACKWARD = 39600000;
+const MS_DST_FORWARD = 3600000;
 
 const clockHTML = `
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -82,11 +85,27 @@ const clockHTML = `
 /**
  * @param {number} input
  */
-const wrap = (input) => {
-  if (input >= 0) return input;
+function wrap(input) {
+  const wrapped = input % 1;
 
-  return input + 1;
-};
+  return wrapped < 0 ? wrapped + 1 : wrapped;
+}
+
+/**
+ * @param {Date} time
+ */
+function dstType(time) {
+  const reference = new Date();
+  reference.setTime(time.getTime());
+  reference.setUTCHours(time.getUTCHours() - 1);
+
+  const offset = time.getTimezoneOffset();
+  const offsetReference = reference.getTimezoneOffset();
+
+  if (offset === offsetReference) return null;
+
+  return (offsetReference - offset) * MS_1_MINUTE;
+}
 
 /**
  * @param {UfiLayerElement} element
@@ -118,11 +137,12 @@ const ui = (element, esModules) => (
         secondsHandColor: '#BD2420'
       },
       config: {
-        trackSecondsHand: 'frames',
-        trackMinutesHand: 'minutes',
-        trackHoursHand: 'minutes',
+        msDSTStepDuration: 500,
         msSyncPause: 1500,
-        msTransitionDuration: 250
+        msTransitionDuration: 250,
+        trackHoursHand: 'minutes',
+        trackMinutesHand: 'minutes',
+        trackSecondsHand: 'frames'
       }
     };
 
@@ -153,8 +173,8 @@ const ui = (element, esModules) => (
         centerColor,
         faceColor,
         fillColor,
-        labelColor,
         hoursHandColor,
+        labelColor,
         minutesHandColor,
         secondsHandColor
       } = options.style;
@@ -190,24 +210,74 @@ const ui = (element, esModules) => (
 
       const checkTime = () => {
         const {
-          trackSecondsHand,
-          trackMinutesHand,
-          trackHoursHand,
+          msDSTStepDuration,
           msSyncPause,
-          msTransitionDuration
+          msTransitionDuration,
+          trackHoursHand,
+          trackMinutesHand,
+          trackSecondsHand
         } = options.config;
 
         const time = new Date();
 
-        const m = time.getMinutes();
-        const h = time.getHours();
-        const s = time.getSeconds();
+        const dst = dstType(time);
+
         const ms = time.getMilliseconds();
 
-        const msSeconds = s * ms1Second;
-        const msMinutes = m * ms1Minute;
-        const msHours = h * ms1Hour;
+        const s = time.getSeconds();
+        const msSeconds = s * MS_1_SECOND;
         const msSecondsFrames = msSeconds + ms;
+
+        const mRaw = time.getMinutes();
+
+        const msDSTTransitionBase = ((mRaw * MS_1_MINUTE) + msSecondsFrames);
+        const msDSTTransitionTime = (() => {
+          if (!msDSTStepDuration || !dst) return null;
+
+          const handTransition = (
+            (dst > 0 ? MS_DST_FORWARD : MS_DST_BACKWARD) / MS_1_MINUTE
+          ) * msDSTStepDuration;
+
+          const handDrift = (
+            handTransition / MS_1_MINUTE
+          ) * msDSTStepDuration;
+
+          const result = handTransition + handDrift;
+
+          return msDSTTransitionBase > result ? null : result;
+        })();
+
+        const m = (() => {
+          if (
+            !msDSTTransitionTime
+            || msDSTTransitionBase > msDSTTransitionTime
+          ) return mRaw;
+
+          const result = Math.floor(
+            (
+              msDSTTransitionBase / msDSTTransitionTime
+            ) * (
+              msDSTTransitionTime / MS_1_MINUTE
+            ) * (
+              MS_1_MINUTE / msDSTStepDuration
+            )
+          );
+
+          return result;
+        })();
+        const msMinutes = m * MS_1_MINUTE;
+
+        const hRaw = time.getHours();
+
+        const h = (() => {
+          if (
+            !msDSTTransitionTime
+            || msDSTTransitionBase > msDSTTransitionTime
+          ) return hRaw;
+
+          return dst > 0 ? hRaw - 1 : hRaw + 1;
+        })();
+        const msHours = h * MS_1_HOUR;
 
         /**
          * @param {number} from
@@ -228,9 +298,18 @@ const ui = (element, esModules) => (
           return from + (Math.abs(from - to) * pAnimation);
         };
 
+        /**
+         * @param {number} timeBase
+         */
+        const animationTimeDST = (timeBase) => (
+          msDSTTransitionTime
+            ? (timeBase % msDSTStepDuration)
+            : timeBase
+        );
+
         const p = {
           get seconds() {
-            const msSecondsHandTraversal = ms1Minute - msSyncPause;
+            const msSecondsHandTraversal = MS_1_MINUTE - msSyncPause;
 
             if (msSyncPause) {
               const pTransitionPath = msTransitionDuration / msSecondsHandTraversal;
@@ -265,7 +344,7 @@ const ui = (element, esModules) => (
             switch (trackSecondsHand) {
               case 'seconds':
                 return animate(
-                  ((s - 1) * ms1Second) / msSecondsHandTraversal,
+                  ((s - 1) * MS_1_SECOND) / msSecondsHandTraversal,
                   msSeconds / msSecondsHandTraversal,
                   ms
                 );
@@ -277,18 +356,18 @@ const ui = (element, esModules) => (
             switch (trackMinutesHand) {
               case 'minutes':
                 return animate(
-                  ((m - 1) * ms1Minute) / ms1Hour,
-                  msMinutes / ms1Hour,
-                  msSecondsFrames
+                  ((m - 1) * MS_1_MINUTE) / MS_1_HOUR,
+                  msMinutes / MS_1_HOUR,
+                  animationTimeDST(msSecondsFrames)
                 );
               case 'seconds':
                 return animate(
-                  (msMinutes + ((s - 1) * ms1Second)) / ms1Hour,
-                  (msMinutes + msSeconds) / ms1Hour,
-                  ms
+                  (msMinutes + ((s - 1) * MS_1_SECOND)) / MS_1_HOUR,
+                  (msMinutes + msSeconds) / MS_1_HOUR,
+                  animationTimeDST(ms)
                 );
               case 'frames':
-                return (msMinutes + msSecondsFrames) / ms1Hour;
+                return (msMinutes + msSecondsFrames) / MS_1_HOUR;
             }
           },
           get hours() {
@@ -302,32 +381,36 @@ const ui = (element, esModules) => (
               switch (trackHoursHand) {
                 case 'hours':
                   return animate(
-                    ((h - 1) * ms1Hour) / ms12Hours,
-                    msHours / ms12Hours,
-                    msMinutes + msSecondsFrames
+                    ((h - 1) * MS_1_HOUR) / MS_12_HOURS,
+                    msHours / MS_12_HOURS,
+                    animationTimeDST(msMinutes + msSecondsFrames)
                   );
                 case 'minutes':
                   return animate(
-                    (msHours + ((m - 1) * ms1Minute)) / ms12Hours,
-                    (msHours + msMinutes) / ms12Hours,
-                    msSecondsFrames
+                    (msHours + ((m - 1) * MS_1_MINUTE)) / MS_12_HOURS,
+                    (msHours + msMinutes) / MS_12_HOURS,
+                    animationTimeDST(msSecondsFrames)
                   );
                 case 'seconds':
                   return animate(
-                    (msHours + msMinutes + ((s - 1) * ms1Second)) / ms12Hours,
-                    (msHours + msMinutes + msSeconds) / ms12Hours,
-                    ms
+                    (msHours + msMinutes + ((s - 1) * MS_1_SECOND)) / MS_12_HOURS,
+                    (msHours + msMinutes + msSeconds) / MS_12_HOURS,
+                    animationTimeDST(ms)
                   );
                 case 'frames':
-                  return (msHours + msMinutes + msSecondsFrames) / ms12Hours;
+                  return (msHours + msMinutes + msSecondsFrames) / MS_12_HOURS;
               }
             })());
           }
         };
 
-        elementSecondsHand.style.transform = `rotate(${wrap(p.seconds) * circle}deg)`;
-        elementMinutesHand.style.transform = `rotate(${wrap(p.minutes) * circle}deg)`;
-        elementHoursHand.style.transform = `rotate(${wrap(p.hours) * circle}deg)`;
+        const degSeconds = wrap(p.seconds) * DEG_CIRCLE;
+        const degMinutes = wrap(p.minutes) * DEG_CIRCLE;
+        const degHours = wrap(p.hours) * DEG_CIRCLE;
+
+        elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
+        elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
+        elementHoursHand.style.transform = `rotate(${degHours}deg)`;
 
         if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
       };
