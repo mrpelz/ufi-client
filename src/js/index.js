@@ -4,6 +4,8 @@ import { imageLayer } from './layers/image.js';
 import { moduleLayer } from './layers/module.js';
 import { videoLayer } from './layers/video.js';
 
+const now = Date.now();
+
 // DEBUG START
 let pause = false;
 (() => {
@@ -382,6 +384,14 @@ export function app() {
 
   const stream = new EventSource(streamUrl.toString());
   stream.onmessage = handleMessage;
+  stream.onerror = () => {
+    if (
+      stream.readyState !== stream.CLOSED
+      || (Date.now() - now) < 2000
+    ) return;
+
+    window.location.reload(true);
+  };
 
   const fullscreen = () => {
     // eslint-disable-next-line no-console

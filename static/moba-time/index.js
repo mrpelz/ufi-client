@@ -14,7 +14,7 @@
  *    hoursHandColor: string | null,
  *    labelColor: string | null,
  *    minutesHandColor: string | null,
- *    secondsHandColor: string | null
+ *    secondsHandColor: string | null | undefined
  *  },
  *  config: {
  *    design: 'moba' | 'classic',
@@ -36,7 +36,8 @@ const MS_1_SECOND = 1000;
 const MS_DST_BACKWARD = 39600000;
 const MS_DST_FORWARD = 3600000;
 
-const clockHTML = `
+const svg = {
+  moba: `
 <!-- https://commons.wikimedia.org/wiki/File:Swiss_railway_clock_1.svg -->
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
@@ -82,7 +83,47 @@ const clockHTML = `
   <use xlink:href="#hand-seconds" id="handle-seconds" />
   <use xlink:href="#center" />
 </svg>
-`.trim();
+  `.trim(),
+  classic: `
+<!-- https://commons.wikimedia.org/wiki/File:Swiss_railway_clock.svg -->
+<svg id="clock" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-1024 -1024 2048 2048">
+  <defs>
+    <path id="mark-large" d="M-40-1000h80v300h-80z"/>
+    <path id="mark-middle" d="M-40-1000h80v240h-80z"/>
+    <path id="mark-small" d="M-20-1000h40v100h-40z"/>
+    <path id="hand-hours" d="M-50-600l50-50 50 50v800H-50z"/>
+    <path id="hand-minutes" d="M-40-900l40-40 40 40V280h-80z"/>
+    <path id="hand-seconds" d="m 0,-620 a 120,120 0 0 1 0,240 120,120 0 0 1 0,-240 z m 0,60 a 60,60 0 0 0 0,120 60,60 0 0 0 0,-120 z m -10,-350 10,-10 10,10 2,300 h -24 z m -3,520 h 26 l 7,690 h -40 z" />
+    <g id="face-5min">
+      <use xlink:href="#mark-small" transform="rotate(6)" />
+      <use xlink:href="#mark-small" transform="rotate(12)" />
+      <use xlink:href="#mark-small" transform="rotate(18)" />
+      <use xlink:href="#mark-small" transform="rotate(24)" />
+    </g>
+    <g id="face-15min">
+      <use xlink:href="#face-5min" />
+      <use xlink:href="#face-5min" transform="rotate(30)" />
+      <use xlink:href="#face-5min" transform="rotate(60)" />
+      <use xlink:href="#mark-large" />
+      <use xlink:href="#mark-middle" transform="rotate(30)" />
+      <use xlink:href="#mark-middle" transform="rotate(60)" />
+    </g>
+    <g id="face-full">
+      <use xlink:href="#face-15min" />
+      <use xlink:href="#face-15min" transform="rotate(90)" />
+      <use xlink:href="#face-15min" transform="rotate(180)" />
+      <use xlink:href="#face-15min" transform="rotate(270)" />
+    </g>
+    <circle id="base" r="1024" />
+  </defs>
+  <use xlink:href="#base" />
+  <use xlink:href="#face-full" />
+  <use xlink:href="#hand-hours" id="handle-hours" />
+  <use xlink:href="#hand-minutes" id="handle-minutes" />
+  <use xlink:href="#hand-seconds" id="handle-seconds" />
+</svg>
+  `.trim()
+};
 
 /**
  * @param {number} input
@@ -122,21 +163,22 @@ function dstType(time) {
  */
 const ui = (element, esModules) => (
   new Promise((resolve) => {
+    const root = element.shadowRoot;
 
     /**
      * @type {ClockOptions}
      */
     let options = {
       style: {
-        borderColor: 'lightgrey',
-        borderWidth: 64,
+        borderColor: undefined, // default handling below
+        borderWidth: undefined, // default handling below
         centerColor: 'gold',
         faceColor: 'black',
         fillColor: 'white',
         hoursHandColor: 'black',
         labelColor: 'black',
         minutesHandColor: 'black',
-        secondsHandColor: '#BD2420'
+        secondsHandColor: undefined // default handling below
       },
       config: {
         design: 'moba',
@@ -148,6 +190,21 @@ const ui = (element, esModules) => (
         trackSecondsHand: 'frames'
       }
     };
+
+    /**
+     * @type {HTMLElement}
+     */
+    let elementSecondsHand;
+
+    /**
+     * @type {HTMLElement}
+     */
+    let elementMinutesHand;
+
+    /**
+     * @type {HTMLElement}
+     */
+    let elementHoursHand;
 
     const stateCallback = () => {
 
@@ -182,248 +239,275 @@ const ui = (element, esModules) => (
         secondsHandColor
       } = options.style;
 
-      element.style.setProperty('--border-color', borderColor || 'none');
-      element.style.setProperty('--border-width', borderWidth ? borderWidth.toString() : '0');
+      const { design } = options.config;
+
+      element.style.setProperty('--border-color', (() => {
+        if (borderColor === null || design === 'classic') return 'none';
+        if (borderColor === undefined) return 'lightgrey';
+        return secondsHandColor;
+      })());
+
+      element.style.setProperty('--border-width', (() => {
+        if (borderWidth === null || design === 'classic') return '0';
+        if (borderWidth === undefined) return '64';
+        return borderWidth.toString();
+      })());
+
+      element.style.setProperty('--seconds-hand-color', (() => {
+        if (secondsHandColor === null) return 'none';
+        if (secondsHandColor === undefined) {
+          return design === 'classic' ? '#AA0000' : '#BD2420';
+        }
+        return secondsHandColor;
+      })());
+
       element.style.setProperty('--center-color', centerColor || 'none');
       element.style.setProperty('--face-color', faceColor || 'none');
       element.style.setProperty('--fill-color', fillColor || 'none');
       element.style.setProperty('--label-color', labelColor || 'none');
       element.style.setProperty('--hours-hand-color', hoursHandColor || 'none');
       element.style.setProperty('--minutes-hand-color', minutesHandColor || 'none');
-      element.style.setProperty('--seconds-hand-color', secondsHandColor || 'none');
+
+      const content = document.createRange().createContextualFragment(svg[design]);
+      window.requestAnimationFrame(() => {
+        const clock = root.getElementById('clock');
+        if (clock) clock.remove();
+
+        root.append(content);
+
+        elementSecondsHand = root.getElementById('handle-seconds');
+        elementMinutesHand = root.getElementById('handle-minutes');
+        elementHoursHand = root.getElementById('handle-hours');
+      });
     };
 
     element.ufiStateCallback = stateCallback;
     stateCallback();
-
-    const root = element.shadowRoot;
 
     const [, { default: cubicBezier }] = esModules;
     const transitionSlowHands = cubicBezier(0.4, 2.08, 0.55, 0.44);
     const transitionSecondsHandStop = cubicBezier(0, 0, 0.58, 1);
     const transitionSecondsHandStart = cubicBezier(0.42, 0, 1, 1);
 
-    const content = document.createRange().createContextualFragment(clockHTML);
-    window.requestAnimationFrame(() => {
-      root.append(content);
+    const checkTime = () => {
+      if (
+        (
+          !elementSecondsHand
+          || !elementMinutesHand
+          || !elementHoursHand
+        ) && document.body.contains(element)
+      ) {
+        window.requestAnimationFrame(checkTime);
+        return;
+      }
 
-      const elementSecondsHand = root.getElementById('handle-seconds');
-      const elementMinutesHand = root.getElementById('handle-minutes');
-      const elementHoursHand = root.getElementById('handle-hours');
+      const {
+        msDSTStepDuration,
+        msSyncPause,
+        msTransitionDuration,
+        trackHoursHand,
+        trackMinutesHand,
+        trackSecondsHand
+      } = options.config;
 
-      const checkTime = () => {
-        const {
-          msDSTStepDuration,
-          msSyncPause,
-          msTransitionDuration,
-          trackHoursHand,
-          trackMinutesHand,
-          trackSecondsHand
-        } = options.config;
+      const time = new Date();
 
-        const {
-          secondsHandColor,
-          minutesHandColor,
-          hoursHandColor
-        } = options.style;
+      const dst = dstType(time);
 
-        const time = new Date();
+      const ms = time.getMilliseconds();
 
-        const dst = dstType(time);
+      const s = time.getSeconds();
+      const msSeconds = s * MS_1_SECOND;
+      const msSecondsFrames = msSeconds + ms;
 
-        const ms = time.getMilliseconds();
+      const mRaw = time.getMinutes();
 
-        const s = time.getSeconds();
-        const msSeconds = s * MS_1_SECOND;
-        const msSecondsFrames = msSeconds + ms;
+      const msDSTTransitionBase = ((mRaw * MS_1_MINUTE) + msSecondsFrames);
+      const msDSTTransitionTime = (() => {
+        if (!msDSTStepDuration || !dst) return null;
 
-        const mRaw = time.getMinutes();
+        const handTransition = (
+          (dst > 0 ? MS_DST_FORWARD : MS_DST_BACKWARD) / MS_1_MINUTE
+        ) * msDSTStepDuration;
 
-        const msDSTTransitionBase = ((mRaw * MS_1_MINUTE) + msSecondsFrames);
-        const msDSTTransitionTime = (() => {
-          if (!msDSTStepDuration || !dst) return null;
+        const handDrift = (
+          handTransition / MS_1_MINUTE
+        ) * msDSTStepDuration;
 
-          const handTransition = (
-            (dst > 0 ? MS_DST_FORWARD : MS_DST_BACKWARD) / MS_1_MINUTE
-          ) * msDSTStepDuration;
+        const result = handTransition + handDrift;
 
-          const handDrift = (
-            handTransition / MS_1_MINUTE
-          ) * msDSTStepDuration;
+        return msDSTTransitionBase > result ? null : result;
+      })();
 
-          const result = handTransition + handDrift;
+      const m = (() => {
+        if (
+          !msDSTTransitionTime
+          || msDSTTransitionBase > msDSTTransitionTime
+        ) return mRaw;
 
-          return msDSTTransitionBase > result ? null : result;
-        })();
-
-        const m = (() => {
-          if (
-            !msDSTTransitionTime
-            || msDSTTransitionBase > msDSTTransitionTime
-          ) return mRaw;
-
-          const result = Math.floor(
-            (
-              msDSTTransitionBase / msDSTTransitionTime
-            ) * (
-              msDSTTransitionTime / MS_1_MINUTE
-            ) * (
-              MS_1_MINUTE / msDSTStepDuration
-            )
-          );
-
-          return result;
-        })();
-        const msMinutes = m * MS_1_MINUTE;
-
-        const hRaw = time.getHours();
-
-        const h = (() => {
-          if (
-            !msDSTTransitionTime
-            || msDSTTransitionBase > msDSTTransitionTime
-          ) return hRaw;
-
-          return dst > 0 ? hRaw - 1 : hRaw + 1;
-        })();
-        const msHours = h * MS_1_HOUR;
-
-        /**
-         * @param {number} from
-         * @param {number} to
-         * @param {number} timeBase
-         */
-        const animate = (
-          from,
-          to,
-          timeBase
-        ) => {
-          if (!msTransitionDuration || timeBase > msTransitionDuration) return to;
-
-          const pAnimation = transitionSlowHands(
-            timeBase / msTransitionDuration
-          );
-
-          return from + (Math.abs(from - to) * pAnimation);
-        };
-
-        /**
-         * @param {number} timeBase
-         */
-        const animationTimeDST = (timeBase) => (
-          msDSTTransitionTime
-            ? (timeBase % msDSTStepDuration)
-            : timeBase
+        const result = Math.floor(
+          (
+            msDSTTransitionBase / msDSTTransitionTime
+          ) * (
+            msDSTTransitionTime / MS_1_MINUTE
+          ) * (
+            MS_1_MINUTE / msDSTStepDuration
+          )
         );
 
-        const p = {
-          get seconds() {
-            const msSecondsHandTraversal = MS_1_MINUTE - msSyncPause;
+        return result;
+      })();
+      const msMinutes = m * MS_1_MINUTE;
 
-            if (msSyncPause) {
-              const pTransitionPath = msTransitionDuration / msSecondsHandTraversal;
+      const hRaw = time.getHours();
 
-              if (msSecondsFrames < msTransitionDuration) {
-                const pAnimation = transitionSecondsHandStart(
-                  msSecondsFrames / msTransitionDuration
-                );
+      const h = (() => {
+        if (
+          !msDSTTransitionTime
+          || msDSTTransitionBase > msDSTTransitionTime
+        ) return hRaw;
 
-                return pTransitionPath * pAnimation;
-              }
+        return dst > 0 ? hRaw - 1 : hRaw + 1;
+      })();
+      const msHours = h * MS_1_HOUR;
 
-              if (msSecondsFrames > msSecondsHandTraversal) {
-                return 0;
-              }
+      /**
+       * @param {number} from
+       * @param {number} to
+       * @param {number} timeBase
+       */
+      const animate = (
+        from,
+        to,
+        timeBase
+      ) => {
+        if (!msTransitionDuration || timeBase > msTransitionDuration) return to;
 
-              if (msSecondsFrames > (msSecondsHandTraversal - msTransitionDuration)) {
-                const pAnimation = transitionSecondsHandStop(
-                  (
-                    msSecondsFrames - (msSecondsHandTraversal - msTransitionDuration)
-                  ) / msTransitionDuration
-                );
+        const pAnimation = transitionSlowHands(
+          timeBase / msTransitionDuration
+        );
 
-                return (
-                  (
-                    msSecondsHandTraversal - msTransitionDuration
-                  ) / msSecondsHandTraversal
-                ) + (pTransitionPath * pAnimation);
-              }
+        return from + (Math.abs(from - to) * pAnimation);
+      };
+
+      /**
+       * @param {number} timeBase
+       */
+      const animationTimeDST = (timeBase) => (
+        msDSTTransitionTime
+          ? (timeBase % msDSTStepDuration)
+          : timeBase
+      );
+
+      const p = {
+        get seconds() {
+          const msSecondsHandTraversal = MS_1_MINUTE - msSyncPause;
+
+          if (msSyncPause) {
+            const pTransitionPath = msTransitionDuration / msSecondsHandTraversal;
+
+            if (msSecondsFrames < msTransitionDuration) {
+              const pAnimation = transitionSecondsHandStart(
+                msSecondsFrames / msTransitionDuration
+              );
+
+              return pTransitionPath * pAnimation;
             }
 
-            switch (trackSecondsHand) {
-              case 'seconds':
+            if (msSecondsFrames > msSecondsHandTraversal) {
+              return 0;
+            }
+
+            if (msSecondsFrames > (msSecondsHandTraversal - msTransitionDuration)) {
+              const pAnimation = transitionSecondsHandStop(
+                (
+                  msSecondsFrames - (msSecondsHandTraversal - msTransitionDuration)
+                ) / msTransitionDuration
+              );
+
+              return (
+                (
+                  msSecondsHandTraversal - msTransitionDuration
+                ) / msSecondsHandTraversal
+              ) + (pTransitionPath * pAnimation);
+            }
+          }
+
+          switch (trackSecondsHand) {
+            case 'seconds':
+              return animate(
+                ((s - 1) * MS_1_SECOND) / msSecondsHandTraversal,
+                msSeconds / msSecondsHandTraversal,
+                ms
+              );
+            case 'frames':
+              return msSecondsFrames / msSecondsHandTraversal;
+          }
+        },
+        get minutes() {
+          switch (trackMinutesHand) {
+            case 'minutes':
+              return animate(
+                ((m - 1) * MS_1_MINUTE) / MS_1_HOUR,
+                msMinutes / MS_1_HOUR,
+                animationTimeDST(msSecondsFrames)
+              );
+            case 'seconds':
+              return animate(
+                (msMinutes + ((s - 1) * MS_1_SECOND)) / MS_1_HOUR,
+                (msMinutes + msSeconds) / MS_1_HOUR,
+                animationTimeDST(ms)
+              );
+            case 'frames':
+              return (msMinutes + msSecondsFrames) / MS_1_HOUR;
+          }
+        },
+        get hours() {
+
+          /**
+           * @param {number} pHours
+           */
+          const hoursHand = (pHours) => (pHours < 1 ? pHours : pHours - 1);
+
+          return hoursHand((() => {
+            switch (trackHoursHand) {
+              case 'hours':
                 return animate(
-                  ((s - 1) * MS_1_SECOND) / msSecondsHandTraversal,
-                  msSeconds / msSecondsHandTraversal,
-                  ms
+                  ((h - 1) * MS_1_HOUR) / MS_12_HOURS,
+                  msHours / MS_12_HOURS,
+                  animationTimeDST(msMinutes + msSecondsFrames)
                 );
-              case 'frames':
-                return msSecondsFrames / msSecondsHandTraversal;
-            }
-          },
-          get minutes() {
-            switch (trackMinutesHand) {
               case 'minutes':
                 return animate(
-                  ((m - 1) * MS_1_MINUTE) / MS_1_HOUR,
-                  msMinutes / MS_1_HOUR,
+                  (msHours + ((m - 1) * MS_1_MINUTE)) / MS_12_HOURS,
+                  (msHours + msMinutes) / MS_12_HOURS,
                   animationTimeDST(msSecondsFrames)
                 );
               case 'seconds':
                 return animate(
-                  (msMinutes + ((s - 1) * MS_1_SECOND)) / MS_1_HOUR,
-                  (msMinutes + msSeconds) / MS_1_HOUR,
+                  (msHours + msMinutes + ((s - 1) * MS_1_SECOND)) / MS_12_HOURS,
+                  (msHours + msMinutes + msSeconds) / MS_12_HOURS,
                   animationTimeDST(ms)
                 );
               case 'frames':
-                return (msMinutes + msSecondsFrames) / MS_1_HOUR;
+                return (msHours + msMinutes + msSecondsFrames) / MS_12_HOURS;
             }
-          },
-          get hours() {
-
-            /**
-             * @param {number} pHours
-             */
-            const hoursHand = (pHours) => (pHours < 1 ? pHours : pHours - 1);
-
-            return hoursHand((() => {
-              switch (trackHoursHand) {
-                case 'hours':
-                  return animate(
-                    ((h - 1) * MS_1_HOUR) / MS_12_HOURS,
-                    msHours / MS_12_HOURS,
-                    animationTimeDST(msMinutes + msSecondsFrames)
-                  );
-                case 'minutes':
-                  return animate(
-                    (msHours + ((m - 1) * MS_1_MINUTE)) / MS_12_HOURS,
-                    (msHours + msMinutes) / MS_12_HOURS,
-                    animationTimeDST(msSecondsFrames)
-                  );
-                case 'seconds':
-                  return animate(
-                    (msHours + msMinutes + ((s - 1) * MS_1_SECOND)) / MS_12_HOURS,
-                    (msHours + msMinutes + msSeconds) / MS_12_HOURS,
-                    animationTimeDST(ms)
-                  );
-                case 'frames':
-                  return (msHours + msMinutes + msSecondsFrames) / MS_12_HOURS;
-              }
-            })());
-          }
-        };
-
-        const degSeconds = secondsHandColor ? wrap(p.seconds) * DEG_CIRCLE : 0;
-        const degMinutes = minutesHandColor ? wrap(p.minutes) * DEG_CIRCLE : 0;
-        const degHours = hoursHandColor ? wrap(p.hours) * DEG_CIRCLE : 0;
-
-        elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
-        elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
-        elementHoursHand.style.transform = `rotate(${degHours}deg)`;
-
-        if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+          })());
+        }
       };
 
+      const degSeconds = wrap(p.seconds) * DEG_CIRCLE;
+      const degMinutes = wrap(p.minutes) * DEG_CIRCLE;
+      const degHours = wrap(p.hours) * DEG_CIRCLE;
+
+      elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
+      elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
+      elementHoursHand.style.transform = `rotate(${degHours}deg)`;
+
+      if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+    };
+
+    window.requestAnimationFrame(() => {
       checkTime();
       resolve();
     });
