@@ -6,17 +6,18 @@
  * @typedef ClockOptions
  * @type {{
  *  style: {
- *    borderColor: string,
- *    borderWidth: number,
- *    centerColor: string,
- *    faceColor: string,
- *    fillColor: string,
- *    hoursHandColor: string,
- *    labelColor: string,
- *    minutesHandColor: string,
- *    secondsHandColor: string
+ *    borderColor: string | null,
+ *    borderWidth: number | null,
+ *    centerColor: string | null,
+ *    faceColor: string | null,
+ *    fillColor: string | null,
+ *    hoursHandColor: string | null,
+ *    labelColor: string | null,
+ *    minutesHandColor: string | null,
+ *    secondsHandColor: string | null
  *  },
  *  config: {
+ *    design: 'moba' | 'classic',
  *    msDSTStepDuration: number,
  *    msSyncPause: number,
  *    msTransitionDuration: number,
@@ -138,6 +139,7 @@ const ui = (element, esModules) => (
         secondsHandColor: '#BD2420'
       },
       config: {
+        design: 'moba',
         msDSTStepDuration: 500,
         msSyncPause: 1500,
         msTransitionDuration: 250,
@@ -181,7 +183,7 @@ const ui = (element, esModules) => (
       } = options.style;
 
       element.style.setProperty('--border-color', borderColor || 'none');
-      element.style.setProperty('--border-width', borderWidth.toString() || '0');
+      element.style.setProperty('--border-width', borderWidth ? borderWidth.toString() : '0');
       element.style.setProperty('--center-color', centerColor || 'none');
       element.style.setProperty('--face-color', faceColor || 'none');
       element.style.setProperty('--fill-color', fillColor || 'none');
@@ -218,6 +220,12 @@ const ui = (element, esModules) => (
           trackMinutesHand,
           trackSecondsHand
         } = options.config;
+
+        const {
+          secondsHandColor,
+          minutesHandColor,
+          hoursHandColor
+        } = options.style;
 
         const time = new Date();
 
@@ -405,9 +413,9 @@ const ui = (element, esModules) => (
           }
         };
 
-        const degSeconds = wrap(p.seconds) * DEG_CIRCLE;
-        const degMinutes = wrap(p.minutes) * DEG_CIRCLE;
-        const degHours = wrap(p.hours) * DEG_CIRCLE;
+        const degSeconds = secondsHandColor ? wrap(p.seconds) * DEG_CIRCLE : 0;
+        const degMinutes = minutesHandColor ? wrap(p.minutes) * DEG_CIRCLE : 0;
+        const degHours = hoursHandColor ? wrap(p.hours) * DEG_CIRCLE : 0;
 
         elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
         elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
