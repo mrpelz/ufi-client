@@ -36,6 +36,7 @@ const MS_DST_BACKWARD = 39600000;
 const MS_DST_FORWARD = 3600000;
 
 const clockHTML = `
+<!-- https://commons.wikimedia.org/wiki/File:Swiss_railway_clock_1.svg -->
 <svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <path id="mark-large" d="M -40,-1000 l 80,0 0,245 -80,0 z" />
