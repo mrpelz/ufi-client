@@ -73,12 +73,26 @@ function deepEqual(target, source) {
   });
 }
 
+// API-endpoints from ufi-display
+
 /**
  * @param {boolean} on
  */
 function screen(on) {
   fetch(`http://localhost/${on ? 'on' : 'off'}`, { method: 'POST' }).catch(() => { });
 }
+
+function heartbeat() {
+  fetch('http://localhost/heartbeat', { method: 'POST' }).catch(() => { });
+}
+
+function restart() {
+  fetch('http://localhost/restart', { method: 'POST' }).catch(() => { });
+}
+
+// function reboot() {
+//   fetch('http://localhost/reboot', { method: 'POST' }).catch(() => { });
+// }
 
 /**
  * @param {{
@@ -385,12 +399,8 @@ export function app() {
   const stream = new EventSource(streamUrl.toString());
   stream.onmessage = handleMessage;
   stream.onerror = () => {
-    if (
-      stream.readyState !== stream.CLOSED
-      || (Date.now() - now) < 2000
-    ) return;
-
-    window.location.reload(true);
+    if ((Date.now() - now) < 2000) return;
+    restart();
   };
 
   const fullscreen = () => {
@@ -401,7 +411,5 @@ export function app() {
   fullscreen();
   document.documentElement.onclick = fullscreen;
 
-  window.setInterval(() => {
-    if (stream.readyState === stream.CLOSED) window.location.reload(true);
-  }, 60000);
+  window.setInterval(heartbeat, 10000);
 }
