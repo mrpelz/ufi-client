@@ -6,7 +6,7 @@
   "scripts": {
     "amend": "scripts/amend-and-test.sh",
     "deploy": "scripts/deploy.sh",
-    "push": "git push -u origin master --force"
+    "push": "git push -u origin master --force && git push -u github master --force"
   },
   "repository": {
     "type": "git",
