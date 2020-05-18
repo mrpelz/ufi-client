@@ -6,8 +6,8 @@
  * @typedef ClockOptions
  * @type {{
  *  style: {
- *    borderColor: string | null,
- *    borderWidth: number | null,
+ *    borderColor: string | null | undefined,
+ *    borderWidth: number | null | undefined,
  *    centerColor: string | null,
  *    faceColor: string | null,
  *    fillColor: string | null,
