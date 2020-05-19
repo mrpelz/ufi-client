@@ -1,0 +1,55 @@
+:host {
+  display: flex;
+  align-items: center;
+}
+
+#clock {
+  width: 100%;
+  height: 100%;
+}
+
+path {
+  fill: none;
+}
+
+#clock > path {
+  stroke-width: var(--stroke-width);
+  transform: rotate(-90deg);
+}
+
+textPath {
+  fill: white;
+  font-variant-numeric: tabular-nums;
+  text-anchor: end;
+}
+
+#r-millennium {
+  stroke: var(--color-millennium);
+}
+#r-century {
+  stroke: var(--color-century);
+}
+#r-decade {
+  stroke: var(--color-decade);
+}
+#r-year {
+  stroke: var(--color-year);
+}
+#r-month {
+  stroke: var(--color-month);
+}
+#r-week {
+  stroke: var(--color-week);
+}
+#r-day {
+  stroke: var(--color-day);
+}
+#r-hours12 {
+  stroke: var(--color-hours12);
+}
+#r-hour {
+  stroke: var(--color-hour);
+}
+#r-minute {
+  stroke: var(--color-minute);
+}

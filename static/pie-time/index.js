@@ -19,220 +19,13 @@
  * }}
  */
 
-// const DEG_CIRCLE = 360;
-const SECOND = 1000;
-const MINUTE = SECOND * 60;
-const HOUR = MINUTE * 60;
-const HOUR_12 = HOUR * 12;
-const DAY = HOUR * 24;
-const WEEK = DAY * 7;
-
 /**
  * @param {number} input
  */
-// function trimDecimals(input) {
-//   const trimmer = 10 ** 6;
-//   return Math.round(input * trimmer) / trimmer;
-// }
-
-const totalTime = {
-  second: SECOND,
-  minute: MINUTE,
-  hour: HOUR,
-  hours12: HOUR_12,
-  day: DAY,
-  week: WEEK,
-
-  /**
-   * @param {Date} time
-   */
-  month(time) {
-    const daysInMonth = new Date(
-      time.getFullYear(),
-      time.getMonth() + 1,
-      0,
-    ).getDate();
-
-    return DAY * daysInMonth;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  year(time) {
-    const year = time.getFullYear();
-
-    /* eslint-disable-next-line no-bitwise */
-    const daysInYear = ((year & 3 || !(year % 25)) && year & 15)
-      ? 365
-      : 366;
-
-    return DAY * daysInYear;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  decade(time) {
-    const year = time.getFullYear();
-    const decadeStart = Math.floor(year / 10) * 10;
-    const decadeEnd = (Math.ceil((year + 0.1) / 10) * 10) - 1;
-
-    let ms = 0;
-
-    for (
-      let runningYear = decadeStart;
-      runningYear <= decadeEnd;
-      runningYear += 1
-    ) {
-      ms += this.year(new Date(runningYear, 0));
-    }
-
-    return ms;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  century(time) {
-    const year = time.getFullYear();
-    const centuryStart = Math.floor(year / 100) * 100;
-    const centuryEnd = (Math.ceil((year + 0.1) / 100) * 100) - 1;
-
-    let ms = 0;
-
-    for (
-      let runningDecade = centuryStart;
-      runningDecade <= centuryEnd;
-      runningDecade += 10
-    ) {
-      ms += this.decade(new Date(runningDecade, 0));
-    }
-
-    return ms;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  millennium(time) {
-    const year = time.getFullYear();
-    const millenniumStart = Math.floor(year / 1000) * 1000;
-    const millenniumEnd = (Math.ceil((year + 0.1) / 1000) * 1000) - 1;
-
-    let ms = 0;
-
-    for (
-      let runningCentury = millenniumStart;
-      runningCentury <= millenniumEnd;
-      runningCentury += 100
-    ) {
-      ms += this.century(new Date(runningCentury, 0));
-    }
-
-    return ms;
-  }
-};
-
-const startTime = {
-
-  /**
-   * @param {Date} time
-   */
-  second(time) {
-    const result = new Date(time.getTime());
-    result.setMilliseconds(0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  minute(time) {
-    const result = new Date(time.getTime());
-    result.setSeconds(0);
-    result.setMilliseconds(0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  hour(time) {
-    const result = new Date(time.getTime());
-    result.setMinutes(0);
-    result.setSeconds(0);
-    result.setMilliseconds(0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  day(time) {
-    const result = new Date(time.getTime());
-    result.setHours(0, 0, 0, 0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  week(time) {
-    const result = new Date(time.getTime());
-    result.setHours(0, 0, 0, 0);
-    result.setDate(result.getDate() - result.getDay() + 1);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  month(time) {
-    const result = new Date(time.getTime());
-    result.setDate(1);
-    result.setHours(0, 0, 0, 0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  year(time) {
-    const result = new Date(time.getTime());
-    result.setMonth(0);
-    result.setDate(1);
-    result.setHours(0, 0, 0, 0);
-    return result;
-  },
-
-  /**
-   * @param {Date} time
-   */
-  decade(time) {
-    const year = time.getFullYear();
-    const decadeStart = Math.floor(year / 10) * 10;
-    return new Date(decadeStart, 0);
-  },
-
-  /**
-   * @param {Date} time
-   */
-  century(time) {
-    const year = time.getFullYear();
-    const centuryStart = Math.floor(year / 100) * 100;
-    return new Date(centuryStart, 0);
-  },
-
-  /**
-   * @param {Date} time
-   */
-  millennium(time) {
-    const year = time.getFullYear();
-    const millenniumStart = Math.floor(year / 1000) * 1000;
-    return new Date(millenniumStart, 0);
-  }
-};
+function trimDecimals(input) {
+  const trimmer = 10 ** 6;
+  return Math.round(input * trimmer) / trimmer;
+}
 
 /**
  * https://medium.com/hackernoon/a-simple-pie-chart-in-svg-dbdd653b6936
@@ -295,8 +88,14 @@ const svg = `
 
 /**
  * @param {UfiLayerElement} element
+ * @param {[
+ *  {
+ *    default: typeof ui
+ *  },
+ *  typeof import('../utils/time.js')
+ * ]} esModules
  */
-const ui = (element) => (
+const ui = (element, esModules) => (
   new Promise((resolve) => {
     const root = element.shadowRoot;
 
@@ -304,17 +103,17 @@ const ui = (element) => (
      * @type {ClockOptions}
      */
     let options = {
-      colorSecond: '#FF0000',
-      colorMinute: '#994C00',
-      colorHour: '#999900',
-      colorHours12: '#4C9900',
-      colorDay: '#009999',
-      colorWeek: '#004C99',
-      colorMonth: '#000099',
-      colorYear: '#4C0099',
-      colorDecade: '#990099',
-      colorCentury: '#99004C',
-      colorMillennium: '#404040'
+      colorSecond: '#FF2600',
+      colorMinute: '#FF9300',
+      colorHour: '#FFFB00',
+      colorHours12: '#00F900',
+      colorDay: '#00FDFF',
+      colorWeek: '#0096FF',
+      colorMonth: '#0433FF',
+      colorYear: '#9437FF',
+      colorDecade: '#FF40FF',
+      colorCentury: '#FF2F92',
+      colorMillennium: '#FFFFFF'
     };
 
     const stateCallback = () => {
@@ -362,6 +161,8 @@ const ui = (element) => (
     element.ufiStateCallback = stateCallback;
     stateCallback();
 
+    const [, { totalTime, startTime }] = esModules;
+
     const content = document.createRange().createContextualFragment(svg);
     window.requestAnimationFrame(() => {
       root.append(content);
@@ -396,17 +197,17 @@ const ui = (element) => (
         const msRunningCentury = now - startTime.century(time).getTime();
         const msRunningMillennium = now - startTime.millennium(time).getTime();
 
-        const pSecond = msRunningSecond / totalTime.second;
-        const pMinute = msRunningMinute / totalTime.minute;
-        const pHour = msRunningHour / totalTime.hour;
-        const pDay = msRunningDay / totalTime.day;
-        const pHours12 = msRunningHours12 / totalTime.hours12;
-        const pWeek = msRunningWeek / totalTime.week;
-        const pMonth = msRunningMonth / totalTime.month(time);
-        const pYear = msRunningYear / totalTime.year(time);
-        const pDecade = msRunningDecade / totalTime.decade(time);
-        const pCentury = msRunningCentury / totalTime.century(time);
-        const pMillennium = msRunningMillennium / totalTime.millennium(time);
+        const pSecond = trimDecimals(msRunningSecond / totalTime.second);
+        const pMinute = trimDecimals(msRunningMinute / totalTime.minute);
+        const pHour = trimDecimals(msRunningHour / totalTime.hour);
+        const pDay = trimDecimals(msRunningDay / totalTime.day);
+        const pHours12 = trimDecimals(msRunningHours12 / totalTime.hours12);
+        const pWeek = trimDecimals(msRunningWeek / totalTime.week);
+        const pMonth = trimDecimals(msRunningMonth / totalTime.month(time));
+        const pYear = trimDecimals(msRunningYear / totalTime.year(time));
+        const pDecade = trimDecimals(msRunningDecade / totalTime.decade(time));
+        const pCentury = trimDecimals(msRunningCentury / totalTime.century(time));
+        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium(time));
 
         elementSecond.setAttribute('d', getPath(pSecond, Boolean(time.getSeconds() % 2)));
         elementMinute.setAttribute('d', getPath(pMinute, true));

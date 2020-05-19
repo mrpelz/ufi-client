@@ -16,13 +16,7 @@ export const moduleLayer = (element, _, assets) => {
     ({ type, url }) => type === 'modulepreload' && url
   ).map(
     ({ url }) => dynamicImport(url)
-  ).filter(Boolean)).then((esModules) => esModules.filter(
-    (esModule) => (
-      esModules
-      && esModule.default
-      && esModule.default instanceof Function
-    )
-  ));
+  ).filter(Boolean));
 
   const stylesheets = assets.filter(
     ({ type, url }) => type === 'style' && url
