@@ -269,7 +269,7 @@ const ui = (element, esModules) => (
       element.style.setProperty('--minutes-hand-color', minutesHandColor || 'none');
 
       const content = document.createRange().createContextualFragment(svg[design]);
-      window.requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         const clock = root.getElementById('clock');
         if (clock) clock.remove();
 
@@ -297,7 +297,7 @@ const ui = (element, esModules) => (
           || !elementHoursHand
         ) && document.body.contains(element)
       ) {
-        window.requestAnimationFrame(checkTime);
+        requestAnimationFrame(checkTime);
         return;
       }
 
@@ -504,10 +504,10 @@ const ui = (element, esModules) => (
       elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
       elementHoursHand.style.transform = `rotate(${degHours}deg)`;
 
-      if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+      if (document.body.contains(element)) requestAnimationFrame(checkTime);
     };
 
-    window.requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       checkTime();
       resolve();
     });

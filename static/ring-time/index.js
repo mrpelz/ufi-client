@@ -22,9 +22,10 @@
 
 /**
  * @param {number} input
+ * @param {number} decimals
  */
-function trimDecimals(input) {
-  const trimmer = 10 ** 6;
+function trimDecimals(input, decimals = 6) {
+  const trimmer = 10 ** decimals;
   return Math.round(input * trimmer) / trimmer;
 }
 
@@ -39,53 +40,74 @@ function getWeekNumber(input) {
 }
 
 /**
- * https://medium.com/hackernoon/a-simple-pie-chart-in-svg-dbdd653b6936
- * @param {number} percent
- * @param {number} multiply
- */
-function getPath(percent, multiply) {
-  const xEnd = Math.cos(2 * Math.PI * percent) * multiply;
-  const yEnd = Math.sin(2 * Math.PI * percent) * multiply;
-
-  const largeArc = percent > 0.5 ? '1' : '0';
-
-  return [
-    `M ${multiply} ${0}`,
-    `A ${multiply} ${multiply} 0 ${largeArc} 1 ${xEnd} ${yEnd}`
-  ].join(' ');
-}
-
-/**
  * @param {HTMLElement} ring
  * @param {HTMLElement} textPath
- * @param {number} progress
+ * @param {HTMLElement} label
  * @param {number} scale
  * @param {number} fontSize
  */
-function setPaths(ring, textPath, progress, scale, fontSize) {
+function setupElements(ring, textPath, label, scale, fontSize) {
   const position = (-scale).toString();
 
   ring.setAttribute('x', position);
   ring.setAttribute('y', position);
-  ring.setAttribute('d', getPath(progress, scale));
 
   const textPathCorrection = scale - (fontSize / 2.5);
-  const textRingMargin = fontSize * 0.1;
+  const textRingMargin = trimDecimals(fontSize * 0.1);
 
   textPath.setAttribute('x', position);
   textPath.setAttribute('y', position);
   textPath.setAttribute('d', `M 0 -${textPathCorrection} A ${textPathCorrection} ${textPathCorrection} 0 1 1 -${textRingMargin} -${textPathCorrection}`);
+
+  label.setAttribute('font-size', fontSize.toString());
+  label.setAttribute('startOffset', '100%');
+}
+
+/**
+ * https://medium.com/hackernoon/a-simple-pie-chart-in-svg-dbdd653b6936
+ * @param {HTMLElement} path
+ * @param {{ [x: string]: [number, number] }} previousArcs
+ * @param {string} prop
+ * @param {number} progress
+ * @param {number} multiply
+ */
+function setPath(path, previousArcs, prop, progress, multiply) {
+  const [xPrev, yPrev] = previousArcs[prop] || [];
+
+  const xEnd = trimDecimals(Math.cos(2 * Math.PI * progress) * multiply);
+  const yEnd = trimDecimals(Math.sin(2 * Math.PI * progress) * multiply);
+
+  if (
+    xPrev !== undefined
+    && yPrev !== undefined
+    && xPrev === xEnd
+    && yPrev === yEnd
+  ) return;
+
+  previousArcs[prop] = [xEnd, yEnd];
+
+  const largeArc = progress > 0.5 ? '1' : '0';
+
+  const d = [
+    `M ${multiply} ${0}`,
+    `A ${multiply} ${multiply} 0 ${largeArc} 1 ${xEnd} ${yEnd}`
+  ].join(' ');
+
+  path.setAttribute('d', d);
 }
 
 /**
  * @param {HTMLElement} label
- * @param {number} fontSize
+ * @param {{ [x: string]: string }} previousLabels
+ * @param {string} prop
  * @param {string} text
  */
-function setLabel(label, fontSize, text) {
-  label.setAttribute('font-size', fontSize.toString());
-  label.setAttribute('startOffset', '100%');
+function setLabel(label, previousLabels, prop, text) {
+  const previous = previousLabels[prop];
 
+  if (previous !== undefined && previous === text) return;
+
+  previousLabels[prop] = text;
   label.innerHTML = text;
 }
 
@@ -187,57 +209,20 @@ const ui = (element, esModules) => (
       colorMillennium: '#FF2F92'
     };
 
-    const stateCallback = () => {
+    /**
+     * @type {{ [x: string]: [number, number] }}
+     */
+    const previousArcs = {};
 
-      /**
-       * @type {ClockOptions}
-       */
-      const newOptions = (
-        element.ufiState.data instanceof Object
-        && element.ufiState.data
-      ) || {};
-
-      options = {
-        ...options,
-        ...newOptions
-      };
-
-      const {
-        strokeWidth,
-        colorSecond,
-        colorMinute,
-        colorHour,
-        colorHours12,
-        colorDay,
-        colorWeek,
-        colorMonth,
-        colorYear,
-        colorDecade,
-        colorCentury,
-        colorMillennium
-      } = options;
-
-      element.style.setProperty('--stroke-width', strokeWidth.toString() || '0');
-      element.style.setProperty('--color-second', colorSecond || 'none');
-      element.style.setProperty('--color-minute', colorMinute || 'none');
-      element.style.setProperty('--color-hour', colorHour || 'none');
-      element.style.setProperty('--color-hours12', colorHours12 || 'none');
-      element.style.setProperty('--color-day', colorDay || 'none');
-      element.style.setProperty('--color-week', colorWeek || 'none');
-      element.style.setProperty('--color-month', colorMonth || 'none');
-      element.style.setProperty('--color-year', colorYear || 'none');
-      element.style.setProperty('--color-decade', colorDecade || 'none');
-      element.style.setProperty('--color-century', colorCentury || 'none');
-      element.style.setProperty('--color-millennium', colorMillennium || 'none');
-    };
-
-    element.ufiStateCallback = stateCallback;
-    stateCallback();
+    /**
+     * @type {{ [x: string]: string }}
+     */
+    const previousLabels = {};
 
     const [, { totalTime, startTime }] = esModules;
 
     const content = document.createRange().createContextualFragment(svg);
-    window.requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       root.append(content);
 
       const ringMinute = root.getElementById('r-minute');
@@ -273,9 +258,65 @@ const ui = (element, esModules) => (
       const labelCentury = root.getElementById('l-century');
       const labelMillennium = root.getElementById('l-millennium');
 
-      const checkTime = () => {
-        const { strokeWidth } = options;
+      const stateCallback = () => {
 
+        /**
+         * @type {ClockOptions}
+         */
+        const newOptions = (
+          element.ufiState.data instanceof Object
+          && element.ufiState.data
+        ) || {};
+
+        options = {
+          ...options,
+          ...newOptions
+        };
+
+        const {
+          strokeWidth,
+          colorSecond,
+          colorMinute,
+          colorHour,
+          colorHours12,
+          colorDay,
+          colorWeek,
+          colorMonth,
+          colorYear,
+          colorDecade,
+          colorCentury,
+          colorMillennium
+        } = options;
+
+        element.style.setProperty('--stroke-width', strokeWidth.toString() || '0');
+        element.style.setProperty('--color-second', colorSecond || 'none');
+        element.style.setProperty('--color-minute', colorMinute || 'none');
+        element.style.setProperty('--color-hour', colorHour || 'none');
+        element.style.setProperty('--color-hours12', colorHours12 || 'none');
+        element.style.setProperty('--color-day', colorDay || 'none');
+        element.style.setProperty('--color-week', colorWeek || 'none');
+        element.style.setProperty('--color-month', colorMonth || 'none');
+        element.style.setProperty('--color-year', colorYear || 'none');
+        element.style.setProperty('--color-decade', colorDecade || 'none');
+        element.style.setProperty('--color-century', colorCentury || 'none');
+        element.style.setProperty('--color-millennium', colorMillennium || 'none');
+
+        setupElements(ringMinute, textPathMinute, labelMinute, 1, strokeWidth);
+        setupElements(ringHour, textPathHour, labelHour, 1.5, strokeWidth);
+        setupElements(ringHours12, textPathHours12, labelHours12, 2, strokeWidth);
+        setupElements(ringDay, textPathDay, labelDay, 2.5, strokeWidth);
+        setupElements(ringWeek, textPathWeek, labelWeek, 3, strokeWidth);
+        setupElements(ringMonth, textPathMonth, labelMonth, 3.5, strokeWidth);
+        setupElements(ringYear, textPathYear, labelYear, 4, strokeWidth);
+        setupElements(ringDecade, textPathDecade, labelDecade, 4.5, strokeWidth);
+        setupElements(ringCentury, textPathCentury, labelCentury, 5, strokeWidth);
+        setupElements(ringMillennium, textPathMillennium, labelMillennium, 5.5, strokeWidth);
+      };
+
+      element.ufiStateCallback = stateCallback;
+      stateCallback();
+
+      const checkTime = () => {
         const time = new Date();
         const now = time.getTime();
 
@@ -292,43 +333,43 @@ const ui = (element, esModules) => (
         const msRunningCentury = now - startTime.century.getTime();
         const msRunningMillennium = now - startTime.millennium.getTime();
 
-        const pMinute = trimDecimals(msRunningMinute / totalTime.minute);
-        const pHour = trimDecimals(msRunningHour / totalTime.hour);
-        const pDay = trimDecimals(msRunningDay / totalTime.day);
-        const pHours12 = trimDecimals(msRunningHours12 / totalTime.hours12);
-        const pWeek = trimDecimals(msRunningWeek / totalTime.week);
-        const pMonth = trimDecimals(msRunningMonth / totalTime.month(time));
-        const pYear = trimDecimals(msRunningYear / totalTime.year(time));
-        const pDecade = trimDecimals(msRunningDecade / totalTime.decade(time));
-        const pCentury = trimDecimals(msRunningCentury / totalTime.century);
-        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium);
+        const pMinute = msRunningMinute / totalTime.minute;
+        const pHour = msRunningHour / totalTime.hour;
+        const pHours12 = msRunningHours12 / totalTime.hours12;
+        const pDay = msRunningDay / totalTime.day;
+        const pWeek = msRunningWeek / totalTime.week;
+        const pMonth = msRunningMonth / totalTime.month(time);
+        const pYear = msRunningYear / totalTime.year(time);
+        const pDecade = msRunningDecade / totalTime.decade(time);
+        const pCentury = msRunningCentury / totalTime.century;
+        const pMillennium = msRunningMillennium / totalTime.millennium;
 
-        setPaths(ringMinute, textPathMinute, pMinute, 1, strokeWidth);
-        setPaths(ringHour, textPathHour, pHour, 1.5, strokeWidth);
-        setPaths(ringHours12, textPathHours12, pHours12, 2, strokeWidth);
-        setPaths(ringDay, textPathDay, pDay, 2.5, strokeWidth);
-        setPaths(ringWeek, textPathWeek, pWeek, 3, strokeWidth);
-        setPaths(ringMonth, textPathMonth, pMonth, 3.5, strokeWidth);
-        setPaths(ringYear, textPathYear, pYear, 4, strokeWidth);
-        setPaths(ringDecade, textPathDecade, pDecade, 4.5, strokeWidth);
-        setPaths(ringCentury, textPathCentury, pCentury, 5, strokeWidth);
-        setPaths(ringMillennium, textPathMillennium, pMillennium, 5.5, strokeWidth);
+        setPath(ringMinute, previousArcs, 'minute', pMinute, 1);
+        setPath(ringHour, previousArcs, 'hour', pHour, 1.5);
+        setPath(ringHours12, previousArcs, 'hours12', pHours12, 2);
+        setPath(ringDay, previousArcs, 'day', pDay, 2.5);
+        setPath(ringWeek, previousArcs, 'week', pWeek, 3);
+        setPath(ringMonth, previousArcs, 'month', pMonth, 3.5);
+        setPath(ringYear, previousArcs, 'year', pYear, 4);
+        setPath(ringDecade, previousArcs, 'decade', pDecade, 4.5);
+        setPath(ringCentury, previousArcs, 'century', pCentury, 5);
+        setPath(ringMillennium, previousArcs, 'millennium', pMillennium, 5.5);
 
-        setLabel(labelMinute, strokeWidth, `${time.getMinutes().toString().padStart(2, '00')}`);
-        setLabel(labelHour, strokeWidth, `${time.getHours().toString().padStart(2, '00')}:`);
-        setLabel(labelHours12, strokeWidth, time.getHours() < 12 ? 'AM' : 'PM');
-        setLabel(labelDay, strokeWidth, time.toLocaleString('de', { weekday: 'short', day: '2-digit' }));
-        setLabel(labelWeek, strokeWidth, `KW${getWeekNumber(time).toString().padStart(2, '00')}`);
-        setLabel(labelMonth, strokeWidth, `${time.toLocaleString('de', { month: 'long' })}`);
-        setLabel(labelYear, strokeWidth, `${time.getFullYear()}`);
-        setLabel(labelDecade, strokeWidth, `${Math.floor(time.getFullYear() / 100)}er`);
-        setLabel(labelCentury, strokeWidth, `${Math.floor(time.getFullYear() / 100) + 1}. Jh.`);
-        setLabel(labelMillennium, strokeWidth, `${Math.floor(time.getFullYear() / 1000) + 1}. Jt.`);
+        setLabel(labelMinute, previousLabels, 'minute', `${time.getMinutes().toString().padStart(2, '00')}`);
+        setLabel(labelHour, previousLabels, 'hour', `${time.getHours().toString().padStart(2, '00')}:`);
+        setLabel(labelHours12, previousLabels, 'hours12', time.getHours() < 12 ? 'AM' : 'PM');
+        setLabel(labelDay, previousLabels, 'day', time.toLocaleString('de', { weekday: 'short', day: '2-digit' }));
+        setLabel(labelWeek, previousLabels, 'week', `KW${getWeekNumber(time).toString().padStart(2, '00')}`);
+        setLabel(labelMonth, previousLabels, 'month', `${time.toLocaleString('de', { month: 'long' })}`);
+        setLabel(labelYear, previousLabels, 'year', `${time.getFullYear()}`);
+        setLabel(labelDecade, previousLabels, 'decade', `${Math.floor(time.getFullYear() / 100)}er`);
+        setLabel(labelCentury, previousLabels, 'century', `${Math.floor(time.getFullYear() / 100) + 1}. Jh.`);
+        setLabel(labelMillennium, previousLabels, 'millennium', `${Math.floor(time.getFullYear() / 1000) + 1}. Jt.`);
 
-        if (document.body.contains(element)) window.requestAnimationFrame(checkTime);
+        if (document.body.contains(element)) requestAnimationFrame(checkTime);
       };
 
-      window.requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         checkTime();
         resolve();
       });
