@@ -69,11 +69,12 @@ function setPaths(ring, textPath, progress, scale, fontSize) {
   ring.setAttribute('y', position);
   ring.setAttribute('d', getPath(progress, scale));
 
-  const textPathCorrection = scale - (fontSize / 2);
+  const textPathCorrection = scale - (fontSize / 2.5);
+  const textRingMargin = fontSize * 0.1;
 
   textPath.setAttribute('x', position);
   textPath.setAttribute('y', position);
-  textPath.setAttribute('d', `M 0 ${textPathCorrection} A ${textPathCorrection} ${textPathCorrection} 0 0 1 -0.1 -${textPathCorrection}`);
+  textPath.setAttribute('d', `M 0 -${textPathCorrection} A ${textPathCorrection} ${textPathCorrection} 0 1 1 -${textRingMargin} -${textPathCorrection}`);
 }
 
 /**
@@ -288,8 +289,8 @@ const ui = (element, esModules) => (
         const msRunningMonth = now - startTime.month(time).getTime();
         const msRunningYear = now - startTime.year(time).getTime();
         const msRunningDecade = now - startTime.decade(time).getTime();
-        const msRunningCentury = now - startTime.century(time).getTime();
-        const msRunningMillennium = now - startTime.millennium(time).getTime();
+        const msRunningCentury = now - startTime.century.getTime();
+        const msRunningMillennium = now - startTime.millennium.getTime();
 
         const pMinute = trimDecimals(msRunningMinute / totalTime.minute);
         const pHour = trimDecimals(msRunningHour / totalTime.hour);
@@ -299,8 +300,8 @@ const ui = (element, esModules) => (
         const pMonth = trimDecimals(msRunningMonth / totalTime.month(time));
         const pYear = trimDecimals(msRunningYear / totalTime.year(time));
         const pDecade = trimDecimals(msRunningDecade / totalTime.decade(time));
-        const pCentury = trimDecimals(msRunningCentury / totalTime.century(time));
-        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium(time));
+        const pCentury = trimDecimals(msRunningCentury / totalTime.century);
+        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium);
 
         setPaths(ringMinute, textPathMinute, pMinute, 1, strokeWidth);
         setPaths(ringHour, textPathHour, pHour, 1.5, strokeWidth);

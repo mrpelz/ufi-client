@@ -18,8 +18,10 @@ path {
 }
 
 textPath {
-  fill: white;
   font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke-width: 0.04;
+  stroke: black;
   text-anchor: end;
 }
 
@@ -52,4 +54,35 @@ textPath {
 }
 #r-minute {
   stroke: var(--color-minute);
+}
+
+#l-millennium {
+  fill: var(--color-millennium);
+}
+#l-century {
+  fill: var(--color-century);
+}
+#l-decade {
+  fill: var(--color-decade);
+}
+#l-year {
+  fill: var(--color-year);
+}
+#l-month {
+  fill: var(--color-month);
+}
+#l-week {
+  fill: var(--color-week);
+}
+#l-day {
+  fill: var(--color-day);
+}
+#l-hours12 {
+  fill: var(--color-hours12);
+}
+#l-hour {
+  fill: var(--color-hour);
+}
+#l-minute {
+  fill: var(--color-minute);
 }

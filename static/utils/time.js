@@ -4,14 +4,10 @@ const HOUR = MINUTE * 60;
 const HOUR_12 = HOUR * 12;
 const DAY = HOUR * 24;
 const WEEK = DAY * 7;
+const CENTURY = 3155760000000;
+const MILLENNIUM = 31556995200000;
 
-/**
- * @param {number} input
- */
-// function trimDecimals(input) {
-//   const trimmer = 10 ** 6;
-//   return Math.round(input * trimmer) / trimmer;
-// }
+const START_2000 = new Date(946681200000);
 
 export const totalTime = {
   second: SECOND,
@@ -69,47 +65,51 @@ export const totalTime = {
     return ms;
   },
 
-  /**
-   * @param {Date} time
-   */
-  century(time) {
-    const year = time.getFullYear();
-    const centuryStart = Math.floor(year / 100) * 100;
-    const centuryEnd = (Math.ceil((year + 0.1) / 100) * 100) - 1;
+  century: CENTURY,
 
-    let ms = 0;
+  // /**
+  //  * @param {Date} time
+  //  */
+  // century(time) {
+  //   const year = time.getFullYear();
+  //   const centuryStart = Math.floor(year / 100) * 100;
+  //   const centuryEnd = (Math.ceil((year + 0.1) / 100) * 100) - 1;
 
-    for (
-      let runningDecade = centuryStart;
-      runningDecade <= centuryEnd;
-      runningDecade += 10
-    ) {
-      ms += this.decade(new Date(runningDecade, 0));
-    }
+  //   let ms = 0;
 
-    return ms;
-  },
+  //   for (
+  //     let runningDecade = centuryStart;
+  //     runningDecade <= centuryEnd;
+  //     runningDecade += 10
+  //   ) {
+  //     ms += this.decade(new Date(runningDecade, 0));
+  //   }
 
-  /**
-   * @param {Date} time
-   */
-  millennium(time) {
-    const year = time.getFullYear();
-    const millenniumStart = Math.floor(year / 1000) * 1000;
-    const millenniumEnd = (Math.ceil((year + 0.1) / 1000) * 1000) - 1;
+  //   return ms;
+  // },
 
-    let ms = 0;
+  millennium: MILLENNIUM
 
-    for (
-      let runningCentury = millenniumStart;
-      runningCentury <= millenniumEnd;
-      runningCentury += 100
-    ) {
-      ms += this.century(new Date(runningCentury, 0));
-    }
+  // /**
+  //  * @param {Date} time
+  //  */
+  // millennium(time) {
+  //   const year = time.getFullYear();
+  //   const millenniumStart = Math.floor(year / 1000) * 1000;
+  //   const millenniumEnd = (Math.ceil((year + 0.1) / 1000) * 1000) - 1;
 
-    return ms;
-  }
+  //   let ms = 0;
+
+  //   for (
+  //     let runningCentury = millenniumStart;
+  //     runningCentury <= millenniumEnd;
+  //     runningCentury += 100
+  //   ) {
+  //     ms += this.century(new Date(runningCentury, 0));
+  //   }
+
+  //   return ms;
+  // }
 };
 
 export const startTime = {
@@ -193,21 +193,25 @@ export const startTime = {
     return new Date(decadeStart, 0);
   },
 
-  /**
-   * @param {Date} time
-   */
-  century(time) {
-    const year = time.getFullYear();
-    const centuryStart = Math.floor(year / 100) * 100;
-    return new Date(centuryStart, 0);
-  },
+  century: START_2000,
 
-  /**
-   * @param {Date} time
-   */
-  millennium(time) {
-    const year = time.getFullYear();
-    const millenniumStart = Math.floor(year / 1000) * 1000;
-    return new Date(millenniumStart, 0);
-  }
+  // /**
+  //  * @param {Date} time
+  //  */
+  // century(time) {
+  //   const year = time.getFullYear();
+  //   const centuryStart = Math.floor(year / 100) * 100;
+  //   return new Date(centuryStart, 0);
+  // },
+
+  millennium: START_2000
+
+  // /**
+  //  * @param {Date} time
+  //  */
+  // millennium(time) {
+  //   const year = time.getFullYear();
+  //   const millenniumStart = Math.floor(year / 1000) * 1000;
+  //   return new Date(millenniumStart, 0);
+  // }
 };

@@ -194,8 +194,8 @@ const ui = (element, esModules) => (
         const msRunningMonth = now - startTime.month(time).getTime();
         const msRunningYear = now - startTime.year(time).getTime();
         const msRunningDecade = now - startTime.decade(time).getTime();
-        const msRunningCentury = now - startTime.century(time).getTime();
-        const msRunningMillennium = now - startTime.millennium(time).getTime();
+        const msRunningCentury = now - startTime.century.getTime();
+        const msRunningMillennium = now - startTime.millennium.getTime();
 
         const pSecond = trimDecimals(msRunningSecond / totalTime.second);
         const pMinute = trimDecimals(msRunningMinute / totalTime.minute);
@@ -206,8 +206,8 @@ const ui = (element, esModules) => (
         const pMonth = trimDecimals(msRunningMonth / totalTime.month(time));
         const pYear = trimDecimals(msRunningYear / totalTime.year(time));
         const pDecade = trimDecimals(msRunningDecade / totalTime.decade(time));
-        const pCentury = trimDecimals(msRunningCentury / totalTime.century(time));
-        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium(time));
+        const pCentury = trimDecimals(msRunningCentury / totalTime.century);
+        const pMillennium = trimDecimals(msRunningMillennium / totalTime.millennium);
 
         elementSecond.setAttribute('d', getPath(pSecond, Boolean(time.getSeconds() % 2)));
         elementMinute.setAttribute('d', getPath(pMinute, true));
