@@ -159,7 +159,8 @@ export const startTime = {
   week(time) {
     const result = new Date(time.getTime());
     result.setHours(0, 0, 0, 0);
-    result.setDate(result.getDate() - result.getDay() + 1);
+    const day = result.getDay();
+    result.setDate(result.getDate() - (day < 1 ? 6 : day - 1));
     return result;
   },
 
