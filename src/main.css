@@ -79,7 +79,7 @@ ufi-layer.bottom-half {
 ufi-layer[ufi-type="image"] > img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 ufi-layer[ufi-type="html"] > iframe {
