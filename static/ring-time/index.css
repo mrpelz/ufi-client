@@ -20,7 +20,7 @@ path {
 textPath {
   font-variant-numeric: tabular-nums;
   paint-order: stroke;
-  stroke-width: 0.04;
+  stroke-width: 0.06;
   stroke: black;
   text-anchor: end;
 }

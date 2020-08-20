@@ -195,7 +195,7 @@ const ui = (element, esModules) => (
      * @type {ClockOptions}
      */
     let options = {
-      strokeWidth: 0.4,
+      strokeWidth: 0.46,
       colorSecond: 'none',
       colorMinute: '#FF2600',
       colorHour: '#FF9300',
