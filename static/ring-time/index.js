@@ -43,10 +43,11 @@ function getWeekNumber(input) {
  * @param {HTMLElement} ring
  * @param {HTMLElement} textPath
  * @param {HTMLElement} label
+ * @param {HTMLElement | null} progress
  * @param {number} scale
  * @param {number} fontSize
  */
-function setupElements(ring, textPath, label, scale, fontSize) {
+function setupElements(ring, textPath, label, progress, scale, fontSize) {
   const position = (-scale).toString();
 
   ring.setAttribute('x', position);
@@ -61,6 +62,11 @@ function setupElements(ring, textPath, label, scale, fontSize) {
 
   label.setAttribute('font-size', fontSize.toString());
   label.setAttribute('startOffset', '100%');
+
+  if (!progress) return;
+
+  progress.setAttribute('font-size', trimDecimals(fontSize * 0.5).toString());
+  progress.setAttribute('startOffset', '0.5%');
 }
 
 /**
@@ -97,18 +103,18 @@ function setPath(path, previousArcs, prop, progress, multiply) {
 }
 
 /**
- * @param {HTMLElement} label
+ * @param {HTMLElement} element
  * @param {{ [x: string]: string }} previousLabels
  * @param {string} prop
  * @param {string} text
  */
-function setLabel(label, previousLabels, prop, text) {
+function setText(element, previousLabels, prop, text) {
   const previous = previousLabels[prop];
 
   if (previous !== undefined && previous === text) return;
 
   previousLabels[prop] = text;
-  label.innerHTML = text;
+  element.innerHTML = text;
 }
 
 const svg = `
@@ -128,52 +134,62 @@ const svg = `
 
   <path id="r-millennium" />
   <text>
-    <textPath id="l-millennium" href="#t-millennium"></textPath>
+    <textPath class="label" id="l-millennium" href="#t-millennium"></textPath>
+    <textPath class="progress" id="p-millennium" href="#t-millennium"></textPath>
   </text>
 
   <path id="r-century" />
   <text>
-    <textPath id="l-century" href="#t-century"></textPath>
+    <textPath class="label" id="l-century" href="#t-century"></textPath>
+    <textPath class="progress" id="p-century" href="#t-century"></textPath>
   </text>
 
   <path id="r-decade" />
   <text>
-    <textPath id="l-decade" href="#t-decade"></textPath>
+    <textPath class="label" id="l-decade" href="#t-decade"></textPath>
+    <textPath class="progress" id="p-decade" href="#t-decade"></textPath>
   </text>
 
   <path id="r-year" />
   <text>
-    <textPath id="l-year" href="#t-year"></textPath>
+    <textPath class="label" id="l-year" href="#t-year"></textPath>
+    <textPath class="progress" id="p-year" href="#t-year"></textPath>
   </text>
 
   <path id="r-month" />
   <text>
-    <textPath id="l-month" href="#t-month"></textPath>
+    <textPath class="label" id="l-month" href="#t-month"></textPath>
+    <textPath class="progress" id="p-month" href="#t-month"></textPath>
   </text>
 
   <path id="r-week" />
   <text>
-    <textPath id="l-week" href="#t-week"></textPath>
+    <textPath class="label" id="l-week" href="#t-week"></textPath>
+    <textPath class="progress" id="p-week" href="#t-week"></textPath>
   </text>
 
   <path id="r-day" />
   <text>
-    <textPath id="l-day" href="#t-day"></textPath>
+    <textPath class="label" id="l-day" href="#t-day"></textPath>
+    <textPath class="progress" id="p-day" href="#t-day"></textPath>
   </text>
 
   <path id="r-hours12" />
   <text>
-    <textPath id="l-hours12" href="#t-hours12"></textPath>
+    <textPath class="label" id="l-hours12" href="#t-hours12"></textPath>
+    <textPath class="progress" id="p-hours12" href="#t-hours12"></textPath>
   </text>
 
   <path id="r-hour" />
   <text>
-    <textPath id="l-hour" href="#t-hour"></textPath>
+    <textPath class="label" id="l-hour" href="#t-hour"></textPath>
+    <textPath class="progress" id="p-hour" href="#t-hour"></textPath>
   </text>
 
   <path id="r-minute" />
   <text>
-    <textPath id="l-minute" href="#t-minute"></textPath>
+    <textPath class="label" id="l-minute" href="#t-minute"></textPath>
+    <!-- <textPath class="progress" id="p-minute" href="#t-minute"></textPath> -->
   </text>
 </svg>
 `.trim();
@@ -258,6 +274,17 @@ const ui = (element, esModules) => (
       const labelCentury = root.getElementById('l-century');
       const labelMillennium = root.getElementById('l-millennium');
 
+      // const progressMinute = root.getElementById('p-minute');
+      const progressHour = root.getElementById('p-hour');
+      const progressHours12 = root.getElementById('p-hours12');
+      const progressDay = root.getElementById('p-day');
+      const progressWeek = root.getElementById('p-week');
+      const progressMonth = root.getElementById('p-month');
+      const progressYear = root.getElementById('p-year');
+      const progressDecade = root.getElementById('p-decade');
+      const progressCentury = root.getElementById('p-century');
+      const progressMillennium = root.getElementById('p-millennium');
+
       const stateCallback = () => {
 
         /**
@@ -301,16 +328,17 @@ const ui = (element, esModules) => (
         element.style.setProperty('--color-century', colorCentury || 'none');
         element.style.setProperty('--color-millennium', colorMillennium || 'none');
 
-        setupElements(ringMinute, textPathMinute, labelMinute, 1, strokeWidth);
-        setupElements(ringHour, textPathHour, labelHour, 1.5, strokeWidth);
-        setupElements(ringHours12, textPathHours12, labelHours12, 2, strokeWidth);
-        setupElements(ringDay, textPathDay, labelDay, 2.5, strokeWidth);
-        setupElements(ringWeek, textPathWeek, labelWeek, 3, strokeWidth);
-        setupElements(ringMonth, textPathMonth, labelMonth, 3.5, strokeWidth);
-        setupElements(ringYear, textPathYear, labelYear, 4, strokeWidth);
-        setupElements(ringDecade, textPathDecade, labelDecade, 4.5, strokeWidth);
-        setupElements(ringCentury, textPathCentury, labelCentury, 5, strokeWidth);
-        setupElements(ringMillennium, textPathMillennium, labelMillennium, 5.5, strokeWidth);
+        // setupElements(ringMinute, textPathMinute, labelMinute, progressMinute, 1, strokeWidth);
+        setupElements(ringMinute, textPathMinute, labelMinute, null, 1, strokeWidth);
+        setupElements(ringHour, textPathHour, labelHour, progressHour, 1.5, strokeWidth);
+        setupElements(ringHours12, textPathHours12, labelHours12, progressHours12, 2, strokeWidth);
+        setupElements(ringDay, textPathDay, labelDay, progressDay, 2.5, strokeWidth);
+        setupElements(ringWeek, textPathWeek, labelWeek, progressWeek, 3, strokeWidth);
+        setupElements(ringMonth, textPathMonth, labelMonth, progressMonth, 3.5, strokeWidth);
+        setupElements(ringYear, textPathYear, labelYear, progressYear, 4, strokeWidth);
+        setupElements(ringDecade, textPathDecade, labelDecade, progressDecade, 4.5, strokeWidth);
+        setupElements(ringCentury, textPathCentury, labelCentury, progressCentury, 5, strokeWidth);
+        setupElements(ringMillennium, textPathMillennium, labelMillennium, progressMillennium, 5.5, strokeWidth);
       };
 
       element.ufiStateCallback = stateCallback;
@@ -355,16 +383,27 @@ const ui = (element, esModules) => (
         setPath(ringCentury, previousArcs, 'century', pCentury, 5);
         setPath(ringMillennium, previousArcs, 'millennium', pMillennium, 5.5);
 
-        setLabel(labelMinute, previousLabels, 'minute', `${time.getMinutes().toString().padStart(2, '00')}`);
-        setLabel(labelHour, previousLabels, 'hour', `${time.getHours().toString().padStart(2, '00')}:`);
-        setLabel(labelHours12, previousLabels, 'hours12', time.getHours() < 12 ? 'AM' : 'PM');
-        setLabel(labelDay, previousLabels, 'day', time.toLocaleString('de', { weekday: 'short', day: '2-digit' }));
-        setLabel(labelWeek, previousLabels, 'week', `KW${getWeekNumber(time).toString().padStart(2, '00')}`);
-        setLabel(labelMonth, previousLabels, 'month', `${time.toLocaleString('de', { month: 'long' })}`);
-        setLabel(labelYear, previousLabels, 'year', `${time.getFullYear()}`);
-        setLabel(labelDecade, previousLabels, 'decade', `${Math.floor(time.getFullYear() / 100)}er`);
-        setLabel(labelCentury, previousLabels, 'century', `${Math.floor(time.getFullYear() / 100) + 1}. Jh.`);
-        setLabel(labelMillennium, previousLabels, 'millennium', `${Math.floor(time.getFullYear() / 1000) + 1}. Jt.`);
+        setText(labelMinute, previousLabels, 'label-minute', `${time.getMinutes().toString().padStart(2, '00')}`);
+        setText(labelHour, previousLabels, 'label-hour', `${time.getHours().toString().padStart(2, '00')}:`);
+        setText(labelHours12, previousLabels, 'label-hours12', time.getHours() < 12 ? 'AM' : 'PM');
+        setText(labelDay, previousLabels, 'label-day', time.toLocaleString('de', { weekday: 'short', day: '2-digit' }));
+        setText(labelWeek, previousLabels, 'label-week', `KW${getWeekNumber(time).toString().padStart(2, '00')}`);
+        setText(labelMonth, previousLabels, 'label-month', `${time.toLocaleString('de', { month: 'long' })}`);
+        setText(labelYear, previousLabels, 'label-year', `${time.getFullYear()}`);
+        setText(labelDecade, previousLabels, 'label-decade', `${Math.floor(time.getFullYear() / 100)}er`);
+        setText(labelCentury, previousLabels, 'label-century', `${Math.floor(time.getFullYear() / 100) + 1}. Jh.`);
+        setText(labelMillennium, previousLabels, 'label-millennium', `${Math.floor(time.getFullYear() / 1000) + 1}. Jt.`);
+
+        // setText(progressMinute, previousLabels, 'progress-minute', `${Math.floor(pMinute * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressHour, previousLabels, 'progress-hour', `${Math.floor(pHour * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressHours12, previousLabels, 'progress-hours12', `${Math.floor(pHours12 * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressDay, previousLabels, 'progress-day', `${Math.floor(pDay * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressWeek, previousLabels, 'progress-week', `${Math.floor(pWeek * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressMonth, previousLabels, 'progress-month', `${Math.floor(pMonth * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressYear, previousLabels, 'progress-year', `${Math.floor(pYear * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressDecade, previousLabels, 'progress-decade', `${Math.floor(pDecade * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressCentury, previousLabels, 'progress-century', `${Math.floor(pCentury * 100).toString(10).padStart(2, '00')}%`);
+        setText(progressMillennium, previousLabels, 'progress-millennium', `${Math.floor(pMillennium * 100).toString(10).padStart(2, '00')}%`);
 
         if (document.body.contains(element)) requestAnimationFrame(checkTime);
       };

@@ -22,7 +22,14 @@ textPath {
   paint-order: stroke;
   stroke-width: 0.06;
   stroke: black;
+}
+
+.label {
   text-anchor: end;
+}
+
+.progress {
+  text-anchor: start;
 }
 
 #r-millennium {
@@ -56,33 +63,43 @@ textPath {
   stroke: var(--color-minute);
 }
 
-#l-millennium {
+#l-millennium,
+#p-millennium {
   fill: var(--color-millennium);
 }
-#l-century {
+#l-century,
+#p-century {
   fill: var(--color-century);
 }
-#l-decade {
+#l-decade,
+#p-decade {
   fill: var(--color-decade);
 }
-#l-year {
+#l-year,
+#p-year {
   fill: var(--color-year);
 }
-#l-month {
+#l-month,
+#p-month {
   fill: var(--color-month);
 }
-#l-week {
+#l-week,
+#p-week {
   fill: var(--color-week);
 }
-#l-day {
+#l-day,
+#p-day {
   fill: var(--color-day);
 }
-#l-hours12 {
+#l-hours12,
+#p-hours12 {
   fill: var(--color-hours12);
 }
-#l-hour {
+#l-hour,
+#p-hour {
   fill: var(--color-hour);
 }
-#l-minute {
+#l-minute,
+#p-minute {
   fill: var(--color-minute);
 }
