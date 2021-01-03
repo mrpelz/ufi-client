@@ -135,6 +135,40 @@ function wrap(input) {
 }
 
 /**
+ * @param {number} input
+ * @param {number} decimals
+ */
+function trimDecimals(input, decimals = 6) {
+  const trimmer = 10 ** decimals;
+  return Math.floor(input * trimmer) / trimmer;
+}
+
+/**
+ * @param {(input: number) => void} draw
+ */
+function efficientDraw(draw) {
+
+  /**
+   * @type {number | null}
+   */
+  let value = null;
+
+  /**
+   * @param {number} input
+   */
+  const fn = (input) => {
+    const newValue = trimDecimals(input, 1);
+    if (newValue === value) return;
+
+    value = newValue;
+
+    draw(value);
+  };
+
+  return fn;
+}
+
+/**
  * @param {Date} time
  */
 function dstType(time) {
@@ -205,6 +239,21 @@ const ui = (element, esModules) => (
      * @type {HTMLElement}
      */
     let elementHoursHand;
+
+    /**
+     * @type {(input: number) => void}
+     */
+    let drawSecondsHand;
+
+    /**
+     * @type {(input: number) => void}
+     */
+    let drawMinutesHand;
+
+    /**
+     * @type {(input: number) => void}
+     */
+    let drawHoursHand;
 
     const stateCallback = () => {
 
@@ -278,6 +327,18 @@ const ui = (element, esModules) => (
         elementSecondsHand = root.getElementById('handle-seconds');
         elementMinutesHand = root.getElementById('handle-minutes');
         elementHoursHand = root.getElementById('handle-hours');
+
+        drawSecondsHand = efficientDraw((deg) => {
+          elementSecondsHand.style.transform = `rotate(${deg}deg)`;
+        });
+
+        drawMinutesHand = efficientDraw((deg) => {
+          elementMinutesHand.style.transform = `rotate(${deg}deg)`;
+        });
+
+        drawHoursHand = efficientDraw((deg) => {
+          elementHoursHand.style.transform = `rotate(${deg}deg)`;
+        });
       });
     };
 
@@ -295,6 +356,9 @@ const ui = (element, esModules) => (
           !elementSecondsHand
           || !elementMinutesHand
           || !elementHoursHand
+          || !drawSecondsHand
+          || !drawMinutesHand
+          || !drawHoursHand
         ) && document.body.contains(element)
       ) {
         requestAnimationFrame(checkTime);
@@ -500,9 +564,9 @@ const ui = (element, esModules) => (
       const degMinutes = wrap(p.minutes) * DEG_CIRCLE;
       const degHours = wrap(p.hours) * DEG_CIRCLE;
 
-      elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
-      elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
-      elementHoursHand.style.transform = `rotate(${degHours}deg)`;
+      drawSecondsHand(degSeconds);
+      drawMinutesHand(degMinutes);
+      drawHoursHand(degHours);
 
       if (document.body.contains(element)) requestAnimationFrame(checkTime);
     };

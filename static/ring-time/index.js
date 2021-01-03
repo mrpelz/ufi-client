@@ -26,7 +26,7 @@
  */
 function trimDecimals(input, decimals = 6) {
   const trimmer = 10 ** decimals;
-  return Math.round(input * trimmer) / trimmer;
+  return Math.floor(input * trimmer) / trimmer;
 }
 
 /**
