@@ -1,11 +1,17 @@
 :host {
-  display: flex;
-  align-items: center;
+  color: white;
+  height: 100vh;
+  margin: unset;
+  overflow: hidden;
+  padding: unset;
+  width: 100vw;
 }
 
-#clock {
-  width: 100%;
-  height: 100%;
+.clock {
+  height: 100vh;
+  position: absolute;
+  transform-origin: center;
+  width: 100vw;
 }
 
 #hand-hours {

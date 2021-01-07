@@ -39,7 +39,7 @@ const MS_DST_FORWARD = 3600000;
 const svg = {
   moba: `
 <!-- https://commons.wikimedia.org/wiki/File:Swiss_railway_clock_1.svg -->
-<svg id="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg class="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <path id="mark-large" d="M -40,-1000 l 80,0 0,245 -80,0 z" />
     <path id="mark-small" d="M -15,-1000 l 30,0 0,80 -30,0 z" />
@@ -47,22 +47,22 @@ const svg = {
     <path id="hand-minutes" d="M -40,-950 l 80,0 10,1200 -100,0 z" />
     <path id="hand-seconds" d="m 0,-750 a 105,105 0 0 1 0,210 105,105 0 0 1 0,-210 z m -20,200 h 30 l 7,890 h -30 z" />
     <g id="face-5min">
-      <use xlink:href="#mark-large" />
-      <use xlink:href="#mark-small" transform="rotate(06)" />
-      <use xlink:href="#mark-small" transform="rotate(12)" />
-      <use xlink:href="#mark-small" transform="rotate(18)" />
-      <use xlink:href="#mark-small" transform="rotate(24)" />
+      <use href="#mark-large" />
+      <use href="#mark-small" transform="rotate(06)" />
+      <use href="#mark-small" transform="rotate(12)" />
+      <use href="#mark-small" transform="rotate(18)" />
+      <use href="#mark-small" transform="rotate(24)" />
     </g>
     <g id="face-15min">
-      <use xlink:href="#face-5min" />
-      <use xlink:href="#face-5min" transform="rotate(30)" />
-      <use xlink:href="#face-5min" transform="rotate(60)" />
+      <use href="#face-5min" />
+      <use href="#face-5min" transform="rotate(30)" />
+      <use href="#face-5min" transform="rotate(60)" />
     </g>
     <g id="face-full">
-      <use xlink:href="#face-15min" />
-      <use xlink:href="#face-15min" transform="rotate(90)" />
-      <use xlink:href="#face-15min" transform="rotate(180)" />
-      <use xlink:href="#face-15min" transform="rotate(270)" />
+      <use href="#face-15min" />
+      <use href="#face-15min" transform="rotate(90)" />
+      <use href="#face-15min" transform="rotate(180)" />
+      <use href="#face-15min" transform="rotate(270)" />
     </g>
     <g id="label">
       <path
@@ -75,18 +75,26 @@ const svg = {
     <circle id="base" r="1104" />
     <circle id="center" r="5" />
   </defs>
-  <use xlink:href="#base" />
-  <use xlink:href="#label" />
-  <use xlink:href="#face-full" />
-  <use xlink:href="#hand-hours" id="handle-hours" />
-  <use xlink:href="#hand-minutes" id="handle-minutes" />
-  <use xlink:href="#hand-seconds" id="handle-seconds" />
-  <use xlink:href="#center" />
+  <use href="#base" />
+  <use href="#label" />
+  <use href="#face-full" />
+</svg>
+<svg class="clock" id="handle-hours" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-hours" />
+</svg>
+<svg class="clock" id="handle-minutes" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-minutes" />
+</svg>
+<svg class="clock" id="handle-seconds" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-seconds" />
+</svg>
+<svg class="clock" viewBox="-1136 -1136 2272 2272" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#center" />
 </svg>
   `.trim(),
   classic: `
 <!-- https://commons.wikimedia.org/wiki/File:Swiss_railway_clock.svg -->
-<svg id="clock" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-1024 -1024 2048 2048">
+<svg class="clock" viewBox="-1024 -1024 2048 2048" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <path id="mark-large" d="M-40-1000h80v300h-80z"/>
     <path id="mark-middle" d="M-40-1000h80v240h-80z"/>
@@ -95,32 +103,38 @@ const svg = {
     <path id="hand-minutes" d="M-40-900l40-40 40 40V280h-80z"/>
     <path id="hand-seconds" d="m 0,-620 a 120,120 0 0 1 0,240 120,120 0 0 1 0,-240 z m 0,60 a 60,60 0 0 0 0,120 60,60 0 0 0 0,-120 z m -10,-350 10,-10 10,10 2,300 h -24 z m -3,520 h 26 l 7,690 h -40 z" />
     <g id="face-5min">
-      <use xlink:href="#mark-small" transform="rotate(6)" />
-      <use xlink:href="#mark-small" transform="rotate(12)" />
-      <use xlink:href="#mark-small" transform="rotate(18)" />
-      <use xlink:href="#mark-small" transform="rotate(24)" />
+      <use href="#mark-small" transform="rotate(6)" />
+      <use href="#mark-small" transform="rotate(12)" />
+      <use href="#mark-small" transform="rotate(18)" />
+      <use href="#mark-small" transform="rotate(24)" />
     </g>
     <g id="face-15min">
-      <use xlink:href="#face-5min" />
-      <use xlink:href="#face-5min" transform="rotate(30)" />
-      <use xlink:href="#face-5min" transform="rotate(60)" />
-      <use xlink:href="#mark-large" />
-      <use xlink:href="#mark-middle" transform="rotate(30)" />
-      <use xlink:href="#mark-middle" transform="rotate(60)" />
+      <use href="#face-5min" />
+      <use href="#face-5min" transform="rotate(30)" />
+      <use href="#face-5min" transform="rotate(60)" />
+      <use href="#mark-large" />
+      <use href="#mark-middle" transform="rotate(30)" />
+      <use href="#mark-middle" transform="rotate(60)" />
     </g>
     <g id="face-full">
-      <use xlink:href="#face-15min" />
-      <use xlink:href="#face-15min" transform="rotate(90)" />
-      <use xlink:href="#face-15min" transform="rotate(180)" />
-      <use xlink:href="#face-15min" transform="rotate(270)" />
+      <use href="#face-15min" />
+      <use href="#face-15min" transform="rotate(90)" />
+      <use href="#face-15min" transform="rotate(180)" />
+      <use href="#face-15min" transform="rotate(270)" />
     </g>
     <circle id="base" r="1024" />
   </defs>
-  <use xlink:href="#base" />
-  <use xlink:href="#face-full" />
-  <use xlink:href="#hand-hours" id="handle-hours" />
-  <use xlink:href="#hand-minutes" id="handle-minutes" />
-  <use xlink:href="#hand-seconds" id="handle-seconds" />
+  <use href="#base" />
+  <use href="#face-full" />
+</svg>
+<svg class="clock" id="handle-hours" viewBox="-1024 -1024 2048 2048" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-hours" />
+</svg>
+<svg class="clock" id="handle-minutes" viewBox="-1024 -1024 2048 2048" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-minutes" />
+</svg>
+<svg class="clock" id="handle-seconds" viewBox="-1024 -1024 2048 2048" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <use href="#hand-seconds" />
 </svg>
   `.trim()
 };
@@ -269,9 +283,11 @@ const ui = (element, esModules) => (
       element.style.setProperty('--minutes-hand-color', minutesHandColor || 'none');
 
       const content = document.createRange().createContextualFragment(svg[design]);
+
       requestAnimationFrame(() => {
-        const clock = root.getElementById('clock');
-        if (clock) clock.remove();
+        Array.from(root.querySelectorAll('.clock')).forEach((child) => {
+          child.remove();
+        });
 
         root.append(content);
 
@@ -500,9 +516,9 @@ const ui = (element, esModules) => (
       const degMinutes = wrap(p.minutes) * DEG_CIRCLE;
       const degHours = wrap(p.hours) * DEG_CIRCLE;
 
-      elementSecondsHand.style.transform = `rotate(${degSeconds}deg)`;
-      elementMinutesHand.style.transform = `rotate(${degMinutes}deg)`;
-      elementHoursHand.style.transform = `rotate(${degHours}deg)`;
+      elementSecondsHand.style.transform = `rotate3d(0,0,1,${degSeconds}deg)`;
+      elementMinutesHand.style.transform = `rotate3d(0,0,1,${degMinutes}deg)`;
+      elementHoursHand.style.transform = `rotate3d(0,0,1,${degHours}deg)`;
 
       if (document.body.contains(element)) requestAnimationFrame(checkTime);
     };
