@@ -122,7 +122,7 @@ const svg = {
   <use xlink:href="#hand-minutes" id="handle-minutes" />
   <use xlink:href="#hand-seconds" id="handle-seconds" />
 </svg>
-  `.trim()
+  `.trim(),
 };
 
 /**
@@ -161,8 +161,8 @@ function dstType(time) {
  *  }
  * ]} esModules
  */
-const ui = (element, esModules) => (
-  new Promise((resolve) => {
+const ui = (element, esModules) => {
+  return new Promise((resolve) => {
     const root = element.shadowRoot;
 
     /**
@@ -178,7 +178,7 @@ const ui = (element, esModules) => (
         hoursHandColor: 'black',
         labelColor: 'black',
         minutesHandColor: 'black',
-        secondsHandColor: undefined // default handling below
+        secondsHandColor: undefined, // default handling below
       },
       config: {
         design: 'moba',
@@ -187,8 +187,8 @@ const ui = (element, esModules) => (
         msTransitionDuration: 250,
         trackHoursHand: 'minutes',
         trackMinutesHand: 'minutes',
-        trackSecondsHand: 'frames'
-      }
+        trackSecondsHand: 'frames',
+      },
     };
 
     /**
@@ -207,24 +207,23 @@ const ui = (element, esModules) => (
     let elementHoursHand;
 
     const stateCallback = () => {
-
+      // eslint-disable-next-line lines-around-comment
       /**
        * @type {ClockOptions}
        */
-      const newOptions = (
-        element.ufiState.data instanceof Object
-        && element.ufiState.data
-      ) || {};
+      const newOptions =
+        (element.ufiState.data instanceof Object && element.ufiState.data) ||
+        {};
 
       options = {
         style: {
           ...options.style,
-          ...newOptions.style
+          ...newOptions.style,
         },
         config: {
           ...options.config,
-          ...newOptions.config
-        }
+          ...newOptions.config,
+        },
       };
 
       const {
@@ -236,39 +235,54 @@ const ui = (element, esModules) => (
         hoursHandColor,
         labelColor,
         minutesHandColor,
-        secondsHandColor
+        secondsHandColor,
       } = options.style;
 
       const { design } = options.config;
 
-      element.style.setProperty('--border-color', (() => {
-        if (borderColor === null || design === 'classic') return 'none';
-        if (borderColor === undefined) return 'lightgrey';
-        return secondsHandColor;
-      })());
+      element.style.setProperty(
+        '--border-color',
+        (() => {
+          if (borderColor === null || design === 'classic') return 'none';
+          if (borderColor === undefined) return 'lightgrey';
+          return borderColor;
+        })()
+      );
 
-      element.style.setProperty('--border-width', (() => {
-        if (borderWidth === null || design === 'classic') return '0';
-        if (borderWidth === undefined) return '64';
-        return borderWidth.toString();
-      })());
+      element.style.setProperty(
+        '--border-width',
+        (() => {
+          if (borderWidth === null || design === 'classic') return '0';
+          if (borderWidth === undefined) return '64';
+          return borderWidth.toString();
+        })()
+      );
 
-      element.style.setProperty('--seconds-hand-color', (() => {
-        if (secondsHandColor === null) return 'none';
-        if (secondsHandColor === undefined) {
-          return design === 'classic' ? '#AA0000' : '#BD2420';
-        }
-        return secondsHandColor;
-      })());
+      element.style.setProperty(
+        '--seconds-hand-color',
+        (() => {
+          if (secondsHandColor === null) return 'none';
+          if (secondsHandColor === undefined) {
+            return design === 'classic' ? '#AA0000' : '#BD2420';
+          }
+          return secondsHandColor;
+        })()
+      );
 
       element.style.setProperty('--center-color', centerColor || 'none');
       element.style.setProperty('--face-color', faceColor || 'none');
       element.style.setProperty('--fill-color', fillColor || 'none');
       element.style.setProperty('--label-color', labelColor || 'none');
       element.style.setProperty('--hours-hand-color', hoursHandColor || 'none');
-      element.style.setProperty('--minutes-hand-color', minutesHandColor || 'none');
+      element.style.setProperty(
+        '--minutes-hand-color',
+        minutesHandColor || 'none'
+      );
 
-      const content = document.createRange().createContextualFragment(svg[design]);
+      const content = document
+        .createRange()
+        .createContextualFragment(svg[design]);
+
       requestAnimationFrame(() => {
         const clock = root.getElementById('clock');
         if (clock) clock.remove();
@@ -291,11 +305,8 @@ const ui = (element, esModules) => (
 
     const checkTime = () => {
       if (
-        (
-          !elementSecondsHand
-          || !elementMinutesHand
-          || !elementHoursHand
-        ) && document.body.contains(element)
+        (!elementSecondsHand || !elementMinutesHand || !elementHoursHand) &&
+        document.body.contains(element)
       ) {
         requestAnimationFrame(checkTime);
         return;
@@ -307,7 +318,7 @@ const ui = (element, esModules) => (
         msTransitionDuration,
         trackHoursHand,
         trackMinutesHand,
-        trackSecondsHand
+        trackSecondsHand,
       } = options.config;
 
       const time = new Date();
@@ -322,17 +333,15 @@ const ui = (element, esModules) => (
 
       const mRaw = time.getMinutes();
 
-      const msDSTTransitionBase = ((mRaw * MS_1_MINUTE) + msSecondsFrames);
+      const msDSTTransitionBase = mRaw * MS_1_MINUTE + msSecondsFrames;
       const msDSTTransitionTime = (() => {
         if (!msDSTStepDuration || !dst) return null;
 
-        const handTransition = (
-          (dst > 0 ? MS_DST_FORWARD : MS_DST_BACKWARD) / MS_1_MINUTE
-        ) * msDSTStepDuration;
+        const handTransition =
+          ((dst > 0 ? MS_DST_FORWARD : MS_DST_BACKWARD) / MS_1_MINUTE) *
+          msDSTStepDuration;
 
-        const handDrift = (
-          handTransition / MS_1_MINUTE
-        ) * msDSTStepDuration;
+        const handDrift = (handTransition / MS_1_MINUTE) * msDSTStepDuration;
 
         const result = handTransition + handDrift;
 
@@ -340,19 +349,14 @@ const ui = (element, esModules) => (
       })();
 
       const m = (() => {
-        if (
-          !msDSTTransitionTime
-          || msDSTTransitionBase > msDSTTransitionTime
-        ) return mRaw;
+        if (!msDSTTransitionTime || msDSTTransitionBase > msDSTTransitionTime) {
+          return mRaw;
+        }
 
         const result = Math.floor(
-          (
-            msDSTTransitionBase / msDSTTransitionTime
-          ) * (
-            msDSTTransitionTime / MS_1_MINUTE
-          ) * (
-            MS_1_MINUTE / msDSTStepDuration
-          )
+          (msDSTTransitionBase / msDSTTransitionTime) *
+            (msDSTTransitionTime / MS_1_MINUTE) *
+            (MS_1_MINUTE / msDSTStepDuration)
         );
 
         return result;
@@ -362,10 +366,9 @@ const ui = (element, esModules) => (
       const hRaw = time.getHours();
 
       const h = (() => {
-        if (
-          !msDSTTransitionTime
-          || msDSTTransitionBase > msDSTTransitionTime
-        ) return hRaw;
+        if (!msDSTTransitionTime || msDSTTransitionBase > msDSTTransitionTime) {
+          return hRaw;
+        }
 
         return dst > 0 ? hRaw - 1 : hRaw + 1;
       })();
@@ -376,35 +379,28 @@ const ui = (element, esModules) => (
        * @param {number} to
        * @param {number} timeBase
        */
-      const animate = (
-        from,
-        to,
-        timeBase
-      ) => {
+      const animate = (from, to, timeBase) => {
         if (!msTransitionDuration || timeBase > msTransitionDuration) return to;
 
-        const pAnimation = transitionSlowHands(
-          timeBase / msTransitionDuration
-        );
+        const pAnimation = transitionSlowHands(timeBase / msTransitionDuration);
 
-        return from + (Math.abs(from - to) * pAnimation);
+        return from + Math.abs(from - to) * pAnimation;
       };
 
       /**
        * @param {number} timeBase
        */
-      const animationTimeDST = (timeBase) => (
-        msDSTTransitionTime
-          ? (timeBase % msDSTStepDuration)
-          : timeBase
-      );
+      const animationTimeDST = (timeBase) => {
+        return msDSTTransitionTime ? timeBase % msDSTStepDuration : timeBase;
+      };
 
       const p = {
         get seconds() {
           const msSecondsHandTraversal = MS_1_MINUTE - msSyncPause;
 
           if (msSyncPause) {
-            const pTransitionPath = msTransitionDuration / msSecondsHandTraversal;
+            const pTransitionPath =
+              msTransitionDuration / msSecondsHandTraversal;
 
             if (msSecondsFrames < msTransitionDuration) {
               const pAnimation = transitionSecondsHandStart(
@@ -418,18 +414,21 @@ const ui = (element, esModules) => (
               return 0;
             }
 
-            if (msSecondsFrames > (msSecondsHandTraversal - msTransitionDuration)) {
+            if (
+              msSecondsFrames >
+              msSecondsHandTraversal - msTransitionDuration
+            ) {
               const pAnimation = transitionSecondsHandStop(
-                (
-                  msSecondsFrames - (msSecondsHandTraversal - msTransitionDuration)
-                ) / msTransitionDuration
+                (msSecondsFrames -
+                  (msSecondsHandTraversal - msTransitionDuration)) /
+                  msTransitionDuration
               );
 
               return (
-                (
-                  msSecondsHandTraversal - msTransitionDuration
-                ) / msSecondsHandTraversal
-              ) + (pTransitionPath * pAnimation);
+                (msSecondsHandTraversal - msTransitionDuration) /
+                  msSecondsHandTraversal +
+                pTransitionPath * pAnimation
+              );
             }
           }
 
@@ -454,7 +453,7 @@ const ui = (element, esModules) => (
               );
             case 'seconds':
               return animate(
-                (msMinutes + ((s - 1) * MS_1_SECOND)) / MS_1_HOUR,
+                (msMinutes + (s - 1) * MS_1_SECOND) / MS_1_HOUR,
                 (msMinutes + msSeconds) / MS_1_HOUR,
                 animationTimeDST(ms)
               );
@@ -463,37 +462,39 @@ const ui = (element, esModules) => (
           }
         },
         get hours() {
-
+          // eslint-disable-next-line lines-around-comment
           /**
            * @param {number} pHours
            */
           const hoursHand = (pHours) => (pHours < 1 ? pHours : pHours - 1);
 
-          return hoursHand((() => {
-            switch (trackHoursHand) {
-              case 'hours':
-                return animate(
-                  ((h - 1) * MS_1_HOUR) / MS_12_HOURS,
-                  msHours / MS_12_HOURS,
-                  animationTimeDST(msMinutes + msSecondsFrames)
-                );
-              case 'minutes':
-                return animate(
-                  (msHours + ((m - 1) * MS_1_MINUTE)) / MS_12_HOURS,
-                  (msHours + msMinutes) / MS_12_HOURS,
-                  animationTimeDST(msSecondsFrames)
-                );
-              case 'seconds':
-                return animate(
-                  (msHours + msMinutes + ((s - 1) * MS_1_SECOND)) / MS_12_HOURS,
-                  (msHours + msMinutes + msSeconds) / MS_12_HOURS,
-                  animationTimeDST(ms)
-                );
-              case 'frames':
-                return (msHours + msMinutes + msSecondsFrames) / MS_12_HOURS;
-            }
-          })());
-        }
+          return hoursHand(
+            (() => {
+              switch (trackHoursHand) {
+                case 'hours':
+                  return animate(
+                    ((h - 1) * MS_1_HOUR) / MS_12_HOURS,
+                    msHours / MS_12_HOURS,
+                    animationTimeDST(msMinutes + msSecondsFrames)
+                  );
+                case 'minutes':
+                  return animate(
+                    (msHours + (m - 1) * MS_1_MINUTE) / MS_12_HOURS,
+                    (msHours + msMinutes) / MS_12_HOURS,
+                    animationTimeDST(msSecondsFrames)
+                  );
+                case 'seconds':
+                  return animate(
+                    (msHours + msMinutes + (s - 1) * MS_1_SECOND) / MS_12_HOURS,
+                    (msHours + msMinutes + msSeconds) / MS_12_HOURS,
+                    animationTimeDST(ms)
+                  );
+                case 'frames':
+                  return (msHours + msMinutes + msSecondsFrames) / MS_12_HOURS;
+              }
+            })()
+          );
+        },
       };
 
       const degSeconds = wrap(p.seconds) * DEG_CIRCLE;
@@ -511,7 +512,7 @@ const ui = (element, esModules) => (
       checkTime();
       resolve();
     });
-  })
-);
+  });
+};
 
 export default ui;
